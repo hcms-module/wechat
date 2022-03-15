@@ -1,0 +1,106 @@
+<div class="page-container" v-cloak>
+    <el-card>
+        <div slot="header" class="breadcrumb">
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item><a href="{:url('wechat/wechat/index')}">应用列表</a></el-breadcrumb-item>
+                <el-breadcrumb-item>{$title}</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <div>
+            <el-form size="small" label-width="80px">
+                <el-form-item required label="应用key">
+                    <el-input v-model="form.app_key" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item required label="应用类型">
+                    <el-radio-group v-model="form.app_type" size="small">
+                        <el-radio :label="1">小程序</el-radio>
+                        <el-radio :label="0">公众号</el-radio>
+                        <el-radio :label="2">开发平台</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item required label="app_id">
+                    <el-input v-model="form.app_id" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item required label="app_secret">
+                    <el-input v-model="form.app_secret" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item label="token">
+                    <el-input v-model="form.token" placeholder=""></el-input>
+                    <div class="form-small">
+                        <small>接受服务推送消息需要配置令牌token，（小程序不开启消息推送可以不填写）</small>
+                    </div>
+                </el-form-item>
+                <el-form-item label="aes_key">
+                    <el-input v-model="form.aes_key" placeholder=""></el-input>
+                    <div class="form-small">
+                        <small>消息加解密密钥（小程序不开启消息推送可以不填写）</small>
+                    </div>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="submitEvent" type="primary" size="small">
+                        提交
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </el-card>
+    <select-image :show="show_select_image" @confirm="selectImageConfirm"
+                  @close="show_select_image=false"></select-image>
+</div>
+<script>
+    $(function () {
+        new Vue({
+            el: ".page-container",
+            data: {
+                show_select_image: false,
+                form: {
+                    app_type: 1
+                }
+            },
+            mounted() {
+                this.getInfo()
+            },
+            methods: {
+                selectImageConfirm(e) {
+                    console.log('selectImageConfirm', e)
+                    this.form.img_url = e[0].file_url
+                },
+                richUpdateEvent(e) {
+                    console.log('richUpdateEvent', e)
+                },
+                /**
+                 * 获取编辑所需信息
+                 */
+                getInfo() {
+                    this.httpGet("{:url('wechat/wechat/edit/info')}", {
+                        ...this.getUrlQuery()
+                    }).then(res => {
+                        if (res.code) {
+                            let {app = {}} = res.data
+                            if (app.app_id) {
+                                this.form = {
+                                    ...app
+                                }
+                            }
+                        }
+                    })
+                },
+                /**
+                 * 提交信息
+                 */
+                submitEvent() {
+                    this.httpPost("{:url('wechat/wechat/edit')}", {
+                        ...this.form,
+                    }).then(res => {
+                        if (res.status) {
+                            this.$message.success(res.msg)
+                        }
+                    })
+                },
+            }
+        })
+    })
+</script>
+
+<style>
+</style>
