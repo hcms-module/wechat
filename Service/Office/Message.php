@@ -20,19 +20,12 @@ use Hyperf\Utils\Codec\Json;
 use Hyperf\Utils\Codec\Xml;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-class Message
+class Message extends AbstractOfficeComponent
 {
-    protected OfficeService $service;
-
     /**
      * @Inject()
      */
     private EventDispatcherInterface $event_dispatcher;
-
-    /**
-     * @param OfficeService $service
-     */
-    public function __construct(OfficeService $service) { $this->service = $service; }
 
     /**
      * 公众号服务消息处理

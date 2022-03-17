@@ -10,16 +10,9 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Office;
 
 use App\Application\Wechat\Model\WechatOfficeUser;
-use App\Application\Wechat\Service\OfficeService;
 
-class User
+class User extends AbstractOfficeComponent
 {
-    protected OfficeService $service;
-
-    /**
-     * @param OfficeService $service
-     */
-    public function __construct(OfficeService $service) { $this->service = $service; }
 
     /**
      * @param string $redirect_url

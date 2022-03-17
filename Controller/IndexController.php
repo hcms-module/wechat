@@ -20,6 +20,46 @@ use Hyperf\HttpServer\Contract\RequestInterface;
  */
 class IndexController
 {
+    /**
+     * 生成参数二维码示例
+     * @GetMapping(path="office/qrcode")
+     */
+    function qrcode()
+    {
+        try {
+            // 如果是多个公众号可以加入app_key作为可选参数
+            $office_service = new OfficeService();
+            $res = $office_service->qrcode()
+                ->temporary("OK_" . time());
+
+            return $res ? 'success' : 'failed';
+        } catch (\Throwable $exception) {
+            return $exception->getMessage();
+        }
+    }
+
+    /**
+     * 发送模板消息
+     * @GetMapping(path="office/template")
+     */
+    function template()
+    {
+        try {
+            // 如果是多个公众号可以加入app_key作为可选参数
+            $office_service = new OfficeService();
+            $open_id = 'open_id';
+            $template_id = 'template_id';
+            $data = ['a' => 'x', 'd' => time()];
+            $url = 'url';
+            $mini_program_appid = 'mini_program_appid';
+            $res = $office_service->template()
+                ->sendTemplateMsg($open_id, $template_id, $data, $url, $mini_program_appid);
+
+            return $res ? 'success' : 'failed';
+        } catch (\Throwable $exception) {
+            return $exception->getMessage();
+        }
+    }
 
     /**
      * 公众号消息触发机制
@@ -66,6 +106,7 @@ class IndexController
         try {
             $office_user = $office_service->user()
                 ->oauth($request->input('code'));
+
             //TODO 这里拿到用户的model，下面就可以开发自己的业务
             return "success";
         } catch (\Throwable $exception) {
