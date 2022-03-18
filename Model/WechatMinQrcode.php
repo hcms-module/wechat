@@ -9,17 +9,17 @@ use Hyperf\DbConnection\Model\Model;
 
 /**
  * @property int            $id
- * @property string         $app_key
- * @property int            $app_type
  * @property string         $app_id
- * @property string         $app_secret
- * @property string         $token
- * @property string         $aes_key
+ * @property string         $scene
+ * @property string         $page
+ * @property string         $env_version
+ * @property int            $width
+ * @property string         $file_path
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property string         $deleted_at
  */
-class WechatApp extends Model
+class WechatMinQrcode extends Model
 {
     use SoftDeletes;
 
@@ -28,13 +28,13 @@ class WechatApp extends Model
      *
      * @var string
      */
-    protected $table = 'wechat_app';
+    protected $table = 'wechat_min_qrcode';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_key', 'app_id', 'app_secret', 'token', 'aes_key'];
+    protected $fillable = ['app_id', 'scene'];
     /**
      * The attributes that should be cast to native types.
      *
@@ -42,11 +42,8 @@ class WechatApp extends Model
      */
     protected $casts = [
         'id' => 'integer',
-        'app_type' => 'integer',
+        'width' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    const APP_TYPE_OFFICE = 0;
-    const APP_TYPE_MINI = 1;
 }

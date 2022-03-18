@@ -8,45 +8,44 @@ use Hyperf\Database\Model\SoftDeletes;
 use Hyperf\DbConnection\Model\Model;
 
 /**
- * @property int            $id
- * @property string         $app_key
- * @property int            $app_type
+ * @property int            $mini_user_id
  * @property string         $app_id
- * @property string         $app_secret
+ * @property string         $openid
+ * @property string         $session_key
+ * @property string         $unionid
  * @property string         $token
- * @property string         $aes_key
+ * @property string         $target
+ * @property int            $expire_time
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property string         $deleted_at
  */
-class WechatApp extends Model
+class WechatMinUser extends Model
 {
     use SoftDeletes;
 
+    protected $primaryKey = 'mini_user_id';
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'wechat_app';
+    protected $table = 'wechat_min_user';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_key', 'app_id', 'app_secret', 'token', 'aes_key'];
+    protected $fillable = ['app_id', 'openid'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
     protected $casts = [
-        'id' => 'integer',
-        'app_type' => 'integer',
+        'mini_user_id' => 'integer',
+        'expire_time' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    const APP_TYPE_OFFICE = 0;
-    const APP_TYPE_MINI = 1;
 }

@@ -79,20 +79,20 @@ class Qrcode extends AbstractOfficeComponent
      * 临时参数二维码
      *
      * @param string $scene_str
-     * @param int    $expireTime
+     * @param int    $expire_time
      * @return bool
      */
-    public function temporary(string $scene_str, int $expireTime = 2592000): bool
+    public function temporary(string $scene_str, int $expire_time = 2592000): bool
     {
-        return $this->makeQrcode($scene_str, $expireTime);
+        return $this->makeQrcode($scene_str, $expire_time);
     }
 
-    private function makeQrcode(string $scene_str, int $expireTime = 0)
+    private function makeQrcode(string $scene_str, int $expire_time = 0)
     {
-        if ($expireTime === 0) {
+        if ($expire_time === 0) {
             $res = $this->service->getApp()->qrcode->forever($scene_str);
         } else {
-            $res = $this->service->getApp()->qrcode->temporary($scene_str, $expireTime);
+            $res = $this->service->getApp()->qrcode->temporary($scene_str, $expire_time);
         }
         $ticket = $res['ticket'] ?? '';
         $expire_seconds = $res['expire_seconds'] ?? 0;

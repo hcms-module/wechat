@@ -16,13 +16,13 @@ use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
 /**
- * @Controller(prefix="/wechat/index")
+ * @Controller(prefix="/wechat/office")
  */
 class IndexController
 {
     /**
      * 生成参数二维码示例
-     * @GetMapping(path="office/qrcode")
+     * @GetMapping(path="path="qrcode")
      */
     function qrcode()
     {
@@ -40,7 +40,7 @@ class IndexController
 
     /**
      * 发送模板消息
-     * @GetMapping(path="office/template")
+     * @GetMapping(path="path="template")
      */
     function template()
     {
@@ -63,7 +63,7 @@ class IndexController
 
     /**
      * 公众号消息触发机制
-     * @GetMapping(path="office/message")
+     * @GetMapping(path="path="message")
      */
     function officeMessage(ResponseInterface $response, string $app_key = '')
     {
@@ -80,7 +80,7 @@ class IndexController
     }
 
     /**
-     * @GetMapping(path="office/jssdk")
+     * @GetMapping(path="path="jssdk")
      */
     function getJssdk(RequestInterface $request, ResponseInterface $response)
     {
@@ -98,7 +98,7 @@ class IndexController
     }
 
     /**
-     * @GetMapping(path="office/auth/callback")
+     * @GetMapping(path="path="auth/callback")
      */
     function officeAuthCallBack(RequestInterface $request)
     {
@@ -116,11 +116,11 @@ class IndexController
     }
 
     /**
-     * @GetMapping(path="office/auth")
+     * @GetMapping(path="path="auth")
      */
     function officeAuth(ResponseInterface $response)
     {
-        $redirect_url = url('wechat/index/office/auth/callback', [], true);
+        $redirect_url = url('wechat/index/path="auth/callback', [], true);
         $office_service = new OfficeService();
 
         // snsapi_base 静默授权、snsapi_userinfo显示授权页面

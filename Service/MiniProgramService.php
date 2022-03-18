@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by: zhlhuang (364626853@qq.com)
- * Time: 2022/3/15 14:44
+ * Time: 2022/3/17 16:34
  * Blog: https://www.yuque.com/huangzhenlian
  */
 
@@ -10,23 +10,19 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
-use App\Application\Wechat\Service\Office\Jssdk;
-use App\Application\Wechat\Service\Office\Message;
-use App\Application\Wechat\Service\Office\Qrcode;
-use App\Application\Wechat\Service\Office\Template;
-use App\Application\Wechat\Service\Office\User;
+use App\Application\Wechat\Service\Mini\Qrcode;
+use App\Application\Wechat\Service\Mini\Url;
+use App\Application\Wechat\Service\Mini\User;
 use App\Exception\ErrorException;
 use EasyWeChat\Factory;
-use EasyWeChat\OfficialAccount\Application;
+use EasyWeChat\MiniProgram\Application;
 
 /**
  * @method User user()
- * @method Jssdk jssdk()
- * @method Message message()
- * @method Template template()
  * @method Qrcode qrcode()
+ * @method Url url()
  */
-class OfficeService
+class MiniProgramService
 {
     protected Application $app;
     protected string $app_id;
@@ -38,7 +34,7 @@ class OfficeService
     public function __construct(string $app_key = '')
     {
         $where = [
-            ['app_type', '=', WechatApp::APP_TYPE_OFFICE]
+            ['app_type', '=', WechatApp::APP_TYPE_MINI]
         ];
         if ($app_key !== '') {
             $where[] = ['app_key', '=', $app_key];
@@ -60,20 +56,19 @@ class OfficeService
         if (!$wechat_app->aes_key) {
             $config['aes_key'] = $wechat_app->aes_key;
         }
-        $this->app = Factory::officialAccount($config);
+        $this->app = Factory::miniProgram($config);
     }
 
     public function __call($name, $arguments)
     {
         $name = ucfirst($name);
-        $class_name = "App\\Application\\Wechat\\Service\\Office\\{$name}";
+        $class_name = "App\\Application\\Wechat\\Service\\Mini\\{$name}";
         if (!class_exists($class_name)) {
             throw new ErrorException('对象不存在' . $class_name);
         }
 
         return new  $class_name($this);
     }
-
 
     /**
      * @return Application
