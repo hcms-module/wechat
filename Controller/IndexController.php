@@ -22,7 +22,7 @@ class IndexController
 {
     /**
      * 生成参数二维码示例
-     * @GetMapping(path="path="qrcode")
+     * @GetMapping(path="qrcode")
      */
     function qrcode()
     {
@@ -40,7 +40,7 @@ class IndexController
 
     /**
      * 发送模板消息
-     * @GetMapping(path="path="template")
+     * @GetMapping(path="template")
      */
     function template()
     {
@@ -63,7 +63,7 @@ class IndexController
 
     /**
      * 公众号消息触发机制
-     * @GetMapping(path="path="message")
+     * @GetMapping(path="message")
      */
     function officeMessage(ResponseInterface $response, string $app_key = '')
     {
@@ -80,7 +80,7 @@ class IndexController
     }
 
     /**
-     * @GetMapping(path="path="jssdk")
+     * @GetMapping(path="jssdk")
      */
     function getJssdk(RequestInterface $request, ResponseInterface $response)
     {
@@ -98,7 +98,7 @@ class IndexController
     }
 
     /**
-     * @GetMapping(path="path="auth/callback")
+     * @GetMapping(path="auth/callback")
      */
     function officeAuthCallBack(RequestInterface $request)
     {
@@ -116,7 +116,7 @@ class IndexController
     }
 
     /**
-     * @GetMapping(path="path="auth")
+     * @GetMapping(path="auth")
      */
     function officeAuth(ResponseInterface $response)
     {

@@ -11,6 +11,7 @@ namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
 use App\Application\Wechat\Service\Mini\Qrcode;
+use App\Application\Wechat\Service\Mini\Subscribe;
 use App\Application\Wechat\Service\Mini\Url;
 use App\Application\Wechat\Service\Mini\User;
 use App\Exception\ErrorException;
@@ -21,6 +22,7 @@ use EasyWeChat\MiniProgram\Application;
  * @method User user()
  * @method Qrcode qrcode()
  * @method Url url()
+ * @method Subscribe subscribe()
  */
 class MiniProgramService
 {

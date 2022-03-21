@@ -32,6 +32,40 @@ class MiniController
      */
     protected ResponseInterface $response;
 
+    /**
+     * 发送统一模板消息，发送给公众号
+     * @GetMapping(path="uniform")
+     */
+    public function uniform()
+    {
+        $template_id = 'template_id';
+        $office_appid = 'office_appid';
+        $openid = 'openid';
+        $page = 'page';
+        $data = [];
+        $mini_service = new MiniProgramService();
+        $mini_service->subscribe()
+            ->uniform($openid, $office_appid, $template_id, $page, $data);
+
+        return $this->response->json([]);
+    }
+
+    /**
+     * 发送订阅消息
+     * @GetMapping(path="subscribe")
+     */
+    public function subscribe()
+    {
+        $template_id = 'template_id';
+        $openid = 'openid';
+        $page = 'page';
+        $data = [];
+        $mini_service = new MiniProgramService();
+        $mini_service->subscribe()
+            ->send($template_id, $openid, $page, $data);
+
+        return $this->response->json([]);
+    }
 
     /**
      * @GetMapping(path="scene")
