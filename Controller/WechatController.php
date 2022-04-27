@@ -8,7 +8,6 @@ use App\Annotation\View;
 use App\Application\Admin\Controller\AdminAbstractController;
 use App\Application\Admin\Middleware\AdminMiddleware;
 use App\Application\Wechat\Model\WechatApp;
-use App\Application\Wechat\Service\OfficeService;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
@@ -110,8 +109,5 @@ class WechatController extends AdminAbstractController
      * @View()
      * @GetMapping(path="index")
      */
-    public function index() {
-        $office_service = new OfficeService();
-        var_dump($office_service->getApp()->access_token->getToken());
-    }
+    public function index() { }
 }
