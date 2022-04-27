@@ -15,8 +15,8 @@ return [
     'name' => '',
     'require' => [
         'hcms_version' => '0.3.0',
-        'composer' => [],
+        'composer' => ['overtrue/wechat' => '5.0'],
         'module' => []
     ],
-    'version' => '1.0.0'
+    'version' => '1.1.0'
 ];

@@ -12,6 +12,7 @@ namespace App\Application\Wechat\Controller;
 use App\Application\Wechat\Service\OfficeService;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
+use Hyperf\HttpServer\Annotation\RequestMapping;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
@@ -63,19 +64,18 @@ class IndexController
 
     /**
      * 公众号消息触发机制
-     * @GetMapping(path="message")
+     * @RequestMapping(path="message")
      */
     function officeMessage(ResponseInterface $response, string $app_key = '')
     {
         try {
             // 如果是多个公众号可以加入app_key作为可选参数
             $office_service = new OfficeService($app_key);
-            $res_xml = $office_service->message()
-                ->push();
 
-            return $response->xml($res_xml);
+            return $response->write($office_service->message()
+                ->push());
         } catch (\Throwable $exception) {
-            return $exception->getMessage();
+            return $response->write($exception->getMessage());
         }
     }
 

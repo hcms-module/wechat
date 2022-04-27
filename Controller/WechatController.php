@@ -8,6 +8,7 @@ use App\Annotation\View;
 use App\Application\Admin\Controller\AdminAbstractController;
 use App\Application\Admin\Middleware\AdminMiddleware;
 use App\Application\Wechat\Model\WechatApp;
+use App\Application\Wechat\Service\OfficeService;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
@@ -56,7 +57,7 @@ class WechatController extends AdminAbstractController
                 ->count() > 0) {
             return $this->returnErrorJson('该应用key已经存在');
         }
-        $app_model = WechatApp::find($id);
+        $app_model = WechatApp::findOrNew($id);
         $app_model->app_key = $this->request->post('app_key', '');
         $app_model->app_type = intval($this->request->post('app_type', 0));
         $app_model->app_id = $this->request->post('app_id', '');
@@ -109,5 +110,8 @@ class WechatController extends AdminAbstractController
      * @View()
      * @GetMapping(path="index")
      */
-    public function index() { }
+    public function index() {
+        $office_service = new OfficeService();
+        var_dump($office_service->getApp()->access_token->getToken());
+    }
 }

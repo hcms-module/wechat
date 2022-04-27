@@ -10,6 +10,9 @@
             <el-form size="small" label-width="80px">
                 <el-form-item required label="应用key">
                     <el-input v-model="form.app_key" placeholder=""></el-input>
+                    <div class="form-small">
+                        <small>开发者传参的唯一标识，使用英文或_符号</small>
+                    </div>
                 </el-form-item>
                 <el-form-item required label="应用类型">
                     <el-radio-group v-model="form.app_type" size="small">
@@ -94,6 +97,7 @@
                     }).then(res => {
                         if (res.status) {
                             this.$message.success(res.msg)
+                            location.href = "{:url('wechat/wechat/index')}"
                         }
                     })
                 },

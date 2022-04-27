@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
+use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Application\Wechat\Service\Office\Jssdk;
 use App\Application\Wechat\Service\Office\Message;
 use App\Application\Wechat\Service\Office\Qrcode;
@@ -54,13 +55,15 @@ class OfficeService
         }
         $this->app_id = $wechat_app->app_id;
         $config = ['app_id' => $wechat_app->app_id, 'secret' => $wechat_app->app_secret, 'response_type' => 'array'];
-        if (!$wechat_app->token) {
+        if ($wechat_app->token) {
             $config['token'] = $wechat_app->token;
         }
-        if (!$wechat_app->aes_key) {
+        if ($wechat_app->aes_key) {
             $config['aes_key'] = $wechat_app->aes_key;
         }
         $this->app = Factory::officialAccount($config);
+        //用于swoole的request原因，所以在这里需要重写
+        $this->app['request'] = new WechatRequest();
     }
 
     public function __call($name, $arguments)

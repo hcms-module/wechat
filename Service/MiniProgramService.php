@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
+use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Application\Wechat\Service\Mini\Qrcode;
 use App\Application\Wechat\Service\Mini\Subscribe;
 use App\Application\Wechat\Service\Mini\Url;
@@ -59,6 +60,8 @@ class MiniProgramService
             $config['aes_key'] = $wechat_app->aes_key;
         }
         $this->app = Factory::miniProgram($config);
+        //用于swoole的request原因，所以在这里需要重写
+        $this->app['request'] = new WechatRequest();
     }
 
     public function __call($name, $arguments)

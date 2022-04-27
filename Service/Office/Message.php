@@ -13,11 +13,8 @@ use App\Application\Wechat\Event\OfficeEventMessageEvent;
 use App\Application\Wechat\Event\OfficeMessageEvent;
 use App\Application\Wechat\Model\WechatOfficeEventMessage;
 use App\Application\Wechat\Model\WechatOfficeMessage;
-use App\Application\Wechat\Service\OfficeService;
-use EasyWeChat\Kernel\Clauses\Clause;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Utils\Codec\Json;
-use Hyperf\Utils\Codec\Xml;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 class Message extends AbstractOfficeComponent
@@ -30,29 +27,34 @@ class Message extends AbstractOfficeComponent
     /**
      * 公众号服务消息处理
      *
-     * @return \Symfony\Component\HttpFoundation\Response
-     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
-     * @throws \EasyWeChat\Kernel\Exceptions\InvalidConfigException
-     * @throws \ReflectionException
-     * @throws \EasyWeChat\Kernel\Exceptions\BadRequestException
+     * @return string
      */
-    public function push(): array
+    public function push(): string
     {
-        $this->service->getApp()->server->push(function ($message) {
-            $msg_type = $message['MsgType'] ?? '';
-            if ($msg_type === 'event') {
-                $this->handleEventMessage($message);
-            } else {
-                $this->handleMessage($message);
-            }
+        try {
+            $this->service->getApp()->server->push(function ($message) {
+                $msg_type = $message['MsgType'] ?? '';
+                if ($msg_type === 'event') {
+                    $this->handleEventMessage($message);
+                } else {
+                    $this->handleMessage($message);
+                }
 
-            return "SUCCESS";
-        });
+                return "SUCCESS";
+            });
 
-        return Xml::toArray($this->service->getApp()->server->serve()
-            ->getContent());
+            return $this->service->getApp()->server->serve()
+                ->getContent();
+        } catch (\Exception $exception) {
+            return $exception->getMessage();
+        }
     }
 
+    /**
+     * 处理公众号消息
+     *
+     * @param $message
+     */
     private function handleMessage($message)
     {
         $data = [
@@ -80,9 +82,15 @@ class Message extends AbstractOfficeComponent
         $info_md5 = md5(Json::encode($data));
 
         $office_message = WechatOfficeMessage::firstOrCreate(['info_md5' => $info_md5], $data);
+        //触发公众号消息事件
         $this->event_dispatcher->dispatch(new OfficeMessageEvent($office_message));
     }
 
+    /**
+     * 处理公众号事件
+     *
+     * @param $message
+     */
     private function handleEventMessage($message)
     {
         $data = [
