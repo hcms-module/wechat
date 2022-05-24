@@ -67,9 +67,9 @@ class Qrcode extends AbstractOfficeComponent
      * 永久参数二维码
      *
      * @param string $scene_str
-     * @return bool
+     * @return WechatOfficeQrcode
      */
-    public function forever(string $scene_str)
+    public function forever(string $scene_str): WechatOfficeQrcode
     {
 
         return $this->makeQrcode($scene_str);
@@ -80,9 +80,9 @@ class Qrcode extends AbstractOfficeComponent
      *
      * @param string $scene_str
      * @param int    $expire_time
-     * @return bool
+     * @return WechatOfficeQrcode
      */
-    public function temporary(string $scene_str, int $expire_time = 2592000): bool
+    public function temporary(string $scene_str, int $expire_time = 2592000): WechatOfficeQrcode
     {
         return $this->makeQrcode($scene_str, $expire_time);
     }
@@ -105,14 +105,13 @@ class Qrcode extends AbstractOfficeComponent
         }
         $file_path = $file_path_dir . $file_name;
         file_put_contents($file_path, file_get_contents($url));
-        WechatOfficeQrcode::firstOrCreate([
+
+        return WechatOfficeQrcode::firstOrCreate([
             'app_id' => $this->service->getAppId(),
             'expire_time' => $expire_seconds == 0 ? 0 : (time() + $expire_seconds),
             'scene' => $scene_str,
             'file_path' => $file_path,
             'qrcode_url' => $wechat_qrcode_url,
         ]);
-
-        return true;
     }
 }

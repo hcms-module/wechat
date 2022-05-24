@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Controller;
 
+use App\Annotation\Api;
 use App\Annotation\View;
 use App\Application\Admin\Controller\AdminAbstractController;
 use App\Application\Admin\Middleware\AdminMiddleware;
@@ -21,6 +22,7 @@ class WechatController extends AdminAbstractController
 {
 
     /**
+     * @Api()
      * @GetMapping(path="edit/info")
      */
     public function appEditInfo()
@@ -28,10 +30,11 @@ class WechatController extends AdminAbstractController
         $id = intval($this->request->input('id', 0));
         $app = WechatApp::find($id);
 
-        return $this->returnSuccessJson(compact('app'));
+        return compact('app');
     }
 
     /**
+     * @Api()
      * @PostMapping(path="edit")
      */
     public function appSubmitEdit()
@@ -68,6 +71,7 @@ class WechatController extends AdminAbstractController
     }
 
     /**
+     * @Api()
      * @PostMapping(path="index/delete")
      */
     public function appDelete()
@@ -82,6 +86,7 @@ class WechatController extends AdminAbstractController
     }
 
     /**
+     * @Api()
      * @GetMapping(path="index/lists")
      */
     public function appLists()
@@ -91,7 +96,7 @@ class WechatController extends AdminAbstractController
             ->orderBy('id', 'DESC')
             ->paginate();
 
-        return $this->returnSuccessJson(compact('lists'));
+        return compact('lists');
     }
 
     /**

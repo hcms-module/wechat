@@ -9,31 +9,21 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Controller;
 
+use App\Annotation\Api;
 use App\Application\Wechat\Service\MiniProgramService;
-use Hyperf\Di\Annotation\Inject;
+use App\Controller\AbstractController;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
-use Hyperf\HttpServer\Contract\RequestInterface;
-use Hyperf\HttpServer\Contract\ResponseInterface;
 
 /**
  * @Controller(prefix="wechat/mini")
  */
-class MiniController
+class MiniController extends AbstractController
 {
 
     /**
-     * @Inject()
-     */
-    protected RequestInterface $request;
-
-    /**
-     * @Inject()
-     */
-    protected ResponseInterface $response;
-
-    /**
      * 发送统一模板消息，发送给公众号
+     * @Api()
      * @GetMapping(path="uniform")
      */
     public function uniform()
@@ -47,11 +37,12 @@ class MiniController
         $mini_service->subscribe()
             ->uniform($openid, $office_appid, $template_id, $page, $data);
 
-        return $this->response->json([]);
+        return [];
     }
 
     /**
      * 发送订阅消息
+     * @Api()
      * @GetMapping(path="subscribe")
      */
     public function subscribe()
@@ -64,7 +55,7 @@ class MiniController
         $mini_service->subscribe()
             ->send($template_id, $openid, $page, $data);
 
-        return $this->response->json([]);
+        return [];
     }
 
     /**
@@ -74,12 +65,13 @@ class MiniController
     {
         //处理参数 scene 一般我们使用小程序码、url_link都是通过该指定到首页并通过scene来告知前端需要跳转的目标页面。
         //所以建议后端专门使用一个api来处理跳转
-        return $this->response->json([
+        return [
             'path' => '/',//告诉前端需要跳转的目标页面
-        ]);
+        ];
     }
 
     /**
+     * @Api()
      * @GetMapping(path="url")
      */
     public function url()
@@ -88,10 +80,11 @@ class MiniController
         $res = $mini_service->url()
             ->generate('scene=userid_123');
 
-        return $this->response->json($res->toArray());
+        return $res->toArray();
     }
 
     /**
+     * @Api()
      * @GetMapping(path="qrcode")
      */
     public function qrcode()
@@ -100,10 +93,11 @@ class MiniController
         $res = $mini_service->qrcode()
             ->getQrcodeByScene('s_' . time());
 
-        return $this->response->json($res->toArray());
+        return $res->toArray();
     }
 
     /**
+     * @Api()
      * @GetMapping(path="login")
      */
     public function login()
@@ -113,11 +107,12 @@ class MiniController
         $res = $mini_service->user()
             ->getOpenIdByCode($code);
 
-        return $this->response->json($res->setVisible(['target', 'token', 'openid'])
-            ->toArray());
+        return $res->setVisible(['target', 'token', 'openid'])
+            ->toArray();
     }
 
     /**
+     * @Api()
      * @GetMapping(path="phone")
      */
     public function phone()
@@ -127,7 +122,7 @@ class MiniController
         $res = $mini_service->user()
             ->getPhoneByCode($code);
 
-        return $this->response->json($res->setVisible(['phone', 'country_code'])
-            ->toArray());
+        return $res->setVisible(['phone', 'country_code'])
+            ->toArray();
     }
 }
