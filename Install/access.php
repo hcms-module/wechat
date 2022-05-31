@@ -28,7 +28,13 @@ return [
                 'uri' => 'wechat/wechat/index',
                 'sort' => 100,
                 'is_menu' => 1
-            ]
+            ],
+            [
+                'access_name' => '应用列表',
+                'uri' => 'wechat/wechat/index',
+                'sort' => 100,
+                'is_menu' => 1
+            ],
         ]
     ]
 ];

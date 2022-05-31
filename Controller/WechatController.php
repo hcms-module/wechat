@@ -9,6 +9,8 @@ use App\Annotation\View;
 use App\Application\Admin\Controller\AdminAbstractController;
 use App\Application\Admin\Middleware\AdminMiddleware;
 use App\Application\Wechat\Model\WechatApp;
+use App\Application\Wechat\Service\WechatSetting;
+use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
@@ -20,6 +22,11 @@ use Hyperf\HttpServer\Annotation\PostMapping;
  */
 class WechatController extends AdminAbstractController
 {
+
+    /**
+     * @Inject()
+     */
+    protected WechatSetting $setting;
 
     /**
      * @Api()
@@ -115,4 +122,35 @@ class WechatController extends AdminAbstractController
      * @GetMapping(path="index")
      */
     public function index() { }
+
+    /**
+     * @Api()
+     * @PostMapping(path="work/setting")
+     */
+    public function workSetting()
+    {
+        $post_data = $this->request->post();
+
+        return $this->setting->saveWorkSetting($post_data) ? [] : $this->returnErrorJson();
+    }
+
+    /**
+     * @Api()
+     * @GetMapping(path="work/setting")
+     */
+    public function workSettingInfo()
+    {
+        $setting = $this->setting->getWorkSetting();
+
+        return compact('setting');
+    }
+
+    /**
+     * @View()
+     * @GetMapping(path="work")
+     */
+    public function work()
+    {
+
+    }
 }

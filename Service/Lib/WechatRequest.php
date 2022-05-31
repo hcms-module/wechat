@@ -18,11 +18,37 @@ class WechatRequest
      * @Inject()
      */
     protected RequestInterface $request;
+    /**
+     * @Inject()
+     */
+    protected WechatRequestSession $session;
 
     public function __call($name, $arguments)
     {
+        if ($name == 'session') {
+            return $this->session;
+        }
+
         return $this->request->$name(...$arguments);
     }
+
+    function getSchemeAndHttpHost(): string
+    {
+        return $this->request->getUri()
+                ->getScheme() . '://' . $this->request->getUri()
+                ->getHost();
+    }
+
+    public function getSession(): WechatRequestSession
+    {
+        return $this->session;
+    }
+
+    public function hasSession(): bool
+    {
+        return !empty($this->session->all());
+    }
+
 
     function get($key, $default = '')
     {

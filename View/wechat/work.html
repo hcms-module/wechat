@@ -1,0 +1,90 @@
+<div class="page-container" v-cloak>
+    <el-card>
+        <div slot="header" class="breadcrumb">
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item>企业微信设置</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <div>
+            <el-form size="small" label-width="120px">
+                <el-form-item label="类型">
+                    <el-radio-group v-model="form.wechat_work_type" size="small">
+                        <el-radio label="0">企业内部开发</el-radio>
+                        <el-radio label="1">第三方应用</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item v-show="form.wechat_work_type==1" label="服务商CorpID">
+                    <el-input v-model="form.wechat_openwork_corpid" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item v-show="form.wechat_work_type==1" label="服务商Secret">
+                    <el-input v-model="form.wechat_openwork_secret" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item label="应用SuiteID">
+                    <el-input v-model="form.wechat_work_suite_id" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item label="应用Secret">
+                    <el-input v-model="form.wechat_work_secret" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item label="应用Token">
+                    <el-input v-model="form.wechat_work_token" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item label="应用aes_key">
+                    <el-input v-model="form.wechat_work_aes_key" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="submitEvent" type="primary" size="small">
+                        提交
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </el-card>
+</div>
+<script>
+    $(function () {
+        new Vue({
+            el: ".page-container",
+            data: {
+                show_select_image: false,
+                form: {
+                    wechat_work_type: '1',
+                }
+            },
+            mounted() {
+                this.getInfo()
+            },
+            methods: {
+                /**
+                 * 获取编辑所需信息
+                 */
+                getInfo() {
+                    this.httpGet("{:url('wechat/wechat/work/setting')}", {
+                        ...this.getUrlQuery()
+                    }).then(res => {
+                        if (res.status) {
+                            this.form = {
+                                ...this.form,
+                                ...res.data.setting
+                            }
+                        }
+                    })
+                },
+                /**
+                 * 提交信息
+                 */
+                submitEvent() {
+                    this.httpPost("{:url('wechat/wechat/work/setting')}", {
+                        ...this.form,
+                    }).then(res => {
+                        if (res.status) {
+                            this.$message.success(res.msg)
+                        }
+                    })
+                },
+            }
+        })
+    })
+</script>
+
+<style>
+</style>
