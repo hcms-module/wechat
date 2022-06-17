@@ -30,8 +30,8 @@ return [
                 'is_menu' => 1
             ],
             [
-                'access_name' => '应用列表',
-                'uri' => 'wechat/wechat/index',
+                'access_name' => '企业微信',
+                'uri' => 'wechat/wechat/work',
                 'sort' => 100,
                 'is_menu' => 1
             ],
