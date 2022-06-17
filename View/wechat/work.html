@@ -1,14 +1,16 @@
 <div class="page-container" v-cloak>
     <el-card>
-        <div slot="header" class="breadcrumb">
-            <el-breadcrumb separator="/">
-                <el-breadcrumb-item>企业微信设置</el-breadcrumb-item>
-            </el-breadcrumb>
-        </div>
+        <template #header>
+            <div class="breadcrumb">
+                <el-breadcrumb separator="/">
+                    <el-breadcrumb-item>企业微信设置</el-breadcrumb-item>
+                </el-breadcrumb>
+            </div>
+        </template>
         <div>
-            <el-form size="small" label-width="120px">
+            <el-form label-width="120px">
                 <el-form-item label="类型">
-                    <el-radio-group v-model="form.wechat_work_type" size="small">
+                    <el-radio-group v-model="form.wechat_work_type">
                         <el-radio label="0">企业内部开发</el-radio>
                         <el-radio label="1">第三方应用</el-radio>
                     </el-radio-group>
@@ -32,7 +34,7 @@
                     <el-input v-model="form.wechat_work_aes_key" placeholder=""></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button @click="submitEvent" type="primary" size="small">
+                    <el-button @click="submitEvent" type="primary">
                         提交
                     </el-button>
                 </el-form-item>
@@ -41,49 +43,48 @@
     </el-card>
 </div>
 <script>
-    $(function () {
-        new Vue({
-            el: ".page-container",
-            data: {
+    const App = {
+        data() {
+            return {
                 show_select_image: false,
                 form: {
                     wechat_work_type: '1',
                 }
-            },
-            mounted() {
-                this.getInfo()
-            },
-            methods: {
-                /**
-                 * 获取编辑所需信息
-                 */
-                getInfo() {
-                    this.httpGet("{:url('wechat/wechat/work/setting')}", {
-                        ...this.getUrlQuery()
-                    }).then(res => {
-                        if (res.status) {
-                            this.form = {
-                                ...this.form,
-                                ...res.data.setting
-                            }
-                        }
-                    })
-                },
-                /**
-                 * 提交信息
-                 */
-                submitEvent() {
-                    this.httpPost("{:url('wechat/wechat/work/setting')}", {
-                        ...this.form,
-                    }).then(res => {
-                        if (res.status) {
-                            this.$message.success(res.msg)
-                        }
-                    })
-                },
             }
-        })
-    })
+        },
+        mounted() {
+            this.getInfo()
+        },
+        methods: {
+            /**
+             * 获取编辑所需信息
+             */
+            getInfo() {
+                this.httpGet("{:url('wechat/wechat/work/setting')}", {
+                    ...this.getUrlQuery()
+                }).then(res => {
+                    if (res.status) {
+                        this.form = {
+                            ...this.form,
+                            ...res.data.setting
+                        }
+                    }
+                })
+            },
+            /**
+             * 提交信息
+             */
+            submitEvent() {
+                this.httpPost("{:url('wechat/wechat/work/setting')}", {
+                    ...this.form,
+                }).then(res => {
+                    if (res.status) {
+                        this.$message.success(res.msg)
+                    }
+                })
+            },
+        }
+    }
 </script>
 
 <style>

@@ -21,7 +21,7 @@ return [
         'params' => '',
         'sort' => 100,
         'is_menu' => 1,
-        'menu_icon' => 'el-icon-chat-dot-round',
+        'menu_icon' => 'line-icon-weixin',
         'children' => [
             [
                 'access_name' => '应用列表',
