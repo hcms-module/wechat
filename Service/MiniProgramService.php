@@ -11,24 +11,32 @@ namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
 use App\Application\Wechat\Service\Lib\WechatRequest;
+use App\Application\Wechat\Service\Mini\channel;
 use App\Application\Wechat\Service\Mini\Qrcode;
+use App\Application\Wechat\Service\Mini\Shop;
 use App\Application\Wechat\Service\Mini\Subscribe;
 use App\Application\Wechat\Service\Mini\Url;
 use App\Application\Wechat\Service\Mini\User;
 use App\Exception\ErrorException;
 use EasyWeChat\Factory;
 use EasyWeChat\MiniProgram\Application;
+use Hyperf\Utils\Codec\Json;
+use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * @method User user()
  * @method Qrcode qrcode()
  * @method Url url()
  * @method Subscribe subscribe()
+ * @method Shop shop()
+ * @method Channel channel()
  */
 class MiniProgramService
 {
     protected Application $app;
     protected string $app_id;
+
+    const API_HOST = "https://api.weixin.qq.com";
 
     /**
      * @param string $app_key
@@ -89,5 +97,51 @@ class MiniProgramService
     public function getAppId(): string
     {
         return $this->app_id;
+    }
+
+    /**
+     * @return string
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidConfigException
+     * @throws \EasyWeChat\Kernel\Exceptions\RuntimeException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \EasyWeChat\Kernel\Exceptions\HttpException
+     */
+    public function getToken(): string
+    {
+        return $this->app->access_token->getToken()['access_token'] ?? '';
+    }
+
+    /**
+     * 接口请求封装
+     *
+     * @param string $uri
+     * @param array  $data
+     * @return mixed
+     * @throws ErrorException
+     */
+    public function request(string $uri, array $data)
+    {
+        try {
+            $token = $this->getToken();
+            $url = self::API_HOST . $uri . "?access_token={$token}";
+            $res = $this->getApp()->http_client->post($url, [
+                'json' => $data
+            ]);
+        } catch (\Throwable $exception) {
+            throw new ErrorException("请求错误" . $exception->getMessage());
+        } catch (InvalidArgumentException $exception) {
+            throw new ErrorException("请求参数错误" . $exception->getMessage());
+        }
+
+
+        $result = Json::decode($res->getBody()
+            ->getContents());
+        $errcode = $result['errcode'] ?? -1;
+        if ($errcode !== 0) {
+            throw new ErrorException("请求错误" . $result['errmsg'] ?? '');
+        }
+
+        return $result;
     }
 }

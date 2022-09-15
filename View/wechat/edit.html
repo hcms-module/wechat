@@ -22,11 +22,16 @@
                 </el-form-item>
                 <el-form-item prop="app_type" :rules="[{ required: true, message: '请选择应用类型', trigger: 'blur' }]"
                               required label="应用类型">
-                    <el-radio-group v-model="form.app_type">
-                        <el-radio :label="1">小程序</el-radio>
-                        <el-radio :label="0">公众号</el-radio>
-                        <el-radio :label="2">开发平台</el-radio>
-                    </el-radio-group>
+                    <div>
+                        <el-radio-group v-model="form.app_type">
+                            <el-radio :label="1">小程序</el-radio>
+                            <el-radio :label="0">公众号</el-radio>
+                            <el-radio :label="2">开发平台</el-radio>
+                        </el-radio-group>
+                        <div class="form-small">
+                            <small>微信小商店、视频号小店都选择"小程序"</small>
+                        </div>
+                    </div>
                 </el-form-item>
                 <el-form-item prop="app_id" :rules="[{ required: true, message: '请输入app_id', trigger: 'blur' }]"
                               required label="app_id">

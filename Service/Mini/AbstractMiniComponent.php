@@ -19,4 +19,9 @@ abstract class AbstractMiniComponent
      * @param MiniProgramService $service
      */
     public function __construct(MiniProgramService $service) { $this->service = $service; }
+
+    public function request(string $uri, array $data)
+    {
+        return $this->service->request($uri, $data);
+    }
 }
