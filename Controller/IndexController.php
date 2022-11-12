@@ -73,12 +73,13 @@ class IndexController extends AbstractController
         try {
             // 如果是多个公众号可以加入app_key作为可选参数
             $office_service = new OfficeService($app_key);
-
-            return $this->response->write($office_service->message()
-                ->push());
+            $res = $office_service->message()
+                ->push();
         } catch (\Throwable $exception) {
-            return $this->response->write($exception->getMessage());
+            $res = $exception->getMessage();
         }
+
+        return $res;
     }
 
     /**

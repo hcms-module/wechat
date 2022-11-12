@@ -15,18 +15,32 @@
                         <el-radio label="1">第三方应用</el-radio>
                     </el-radio-group>
                 </el-form-item>
-                <el-form-item v-show="form.wechat_work_type==1" label="服务商CorpID">
-                    <el-input v-model="form.wechat_openwork_corpid" placeholder=""></el-input>
-                </el-form-item>
-                <el-form-item v-show="form.wechat_work_type==1" label="服务商Secret">
-                    <el-input v-model="form.wechat_openwork_secret" placeholder=""></el-input>
-                </el-form-item>
-                <el-form-item label="应用SuiteID">
-                    <el-input v-model="form.wechat_work_suite_id" placeholder=""></el-input>
-                </el-form-item>
-                <el-form-item label="应用Secret">
-                    <el-input v-model="form.wechat_work_secret" placeholder=""></el-input>
-                </el-form-item>
+                <template v-if="form.wechat_work_type==1">
+                    <el-form-item label="服务商CorpID">
+                        <el-input v-model="form.wechat_openwork_corpid" placeholder=""></el-input>
+                    </el-form-item>
+                    <el-form-item label="服务商Secret">
+                        <el-input v-model="form.wechat_openwork_secret" placeholder=""></el-input>
+                    </el-form-item>
+                    <el-form-item label="应用SuiteID">
+                        <el-input v-model="form.wechat_work_suite_id" placeholder=""></el-input>
+                    </el-form-item>
+                    <el-form-item label="应用Secret">
+                        <el-input v-model="form.wechat_work_secret" placeholder=""></el-input>
+                    </el-form-item>
+
+                </template>
+                <template v-else>
+                    <el-form-item label="CorpID">
+                        <el-input v-model="form.wechat_work_corpid" placeholder=""></el-input>
+                    </el-form-item>
+                    <el-form-item label="Secret">
+                        <el-input v-model="form.wechat_work_secret" placeholder=""></el-input>
+                    </el-form-item>
+                    <el-form-item label="应用 agent_id">
+                        <el-input v-model="form.wechat_work_agent_id" placeholder=""></el-input>
+                    </el-form-item>
+                </template>
                 <el-form-item label="应用Token">
                     <el-input v-model="form.wechat_work_token" placeholder=""></el-input>
                 </el-form-item>

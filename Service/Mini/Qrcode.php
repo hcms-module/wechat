@@ -12,9 +12,58 @@ namespace App\Application\Wechat\Service\Mini;
 use App\Application\Wechat\Model\WechatMinQrcode;
 use App\Exception\ErrorException;
 use EasyWeChat\Kernel\Http\StreamResponse;
+use Throwable;
 
 class Qrcode extends AbstractMiniComponent
 {
+    /**
+     * 获取临时二维码
+     *
+     * @param        $scene
+     * @param string $page
+     * @param int    $width
+     * @return WechatMinQrcode
+     * @throws Throwable
+     */
+    public function getTempQrcode(
+        $scene,
+        string $page = '',
+        int $width = 600
+    ): WechatMinQrcode {
+        $qrcode_model = WechatMinQrcode::firstOrCreate([
+            'app_id' => $this->service->getAppId(),
+            'scene' => $scene
+        ]);
+        if ($qrcode_model->id && $qrcode_model->file_path && file_exists($qrcode_model->file_path)) {
+            //如果存在
+            return $qrcode_model;
+        }
+        $optional = [
+            'width' => $width
+        ];
+        $file_name = md5($scene . $page . 'temp') . '.jpg';
+        $file_path_dir = BASE_PATH . '/runtime/temp/mini/qrcode/';
+        if (!is_dir($file_path_dir)) {
+            mkdir($file_path_dir, 0700, true);
+        }
+        $file_path = $file_path_dir . $file_name;
+
+        $response = $this->service->getApp()->app_code->get($page . '?scene=' . $scene, $optional);
+        // 保存小程序码到文件
+        if ($response instanceof StreamResponse) {
+            $response->save($file_path_dir, $file_name);
+        } else {
+            throw new ErrorException('生成小程序码错误');
+        }
+        $qrcode_model->page = $page;
+        $qrcode_model->width = $width;
+        $qrcode_model->env_version = 'temp';
+        $qrcode_model->file_path = $file_path;
+        $qrcode_model->save();
+
+        return $qrcode_model;
+    }
+
     /**
      * 获取永久小程序码，通过scene形式
      *
@@ -23,8 +72,7 @@ class Qrcode extends AbstractMiniComponent
      * @param string $env_version
      * @param int    $width
      * @return WechatMinQrcode
-     * @throws \Throwable
-     * @throws ErrorException
+     * @throws Throwable
      */
     public function getQrcodeByScene(
         $scene,
@@ -32,12 +80,11 @@ class Qrcode extends AbstractMiniComponent
         string $env_version = 'release',
         int $width = 600
     ): WechatMinQrcode {
-
         $qrcode_model = WechatMinQrcode::firstOrCreate([
             'app_id' => $this->service->getAppId(),
             'scene' => $scene
         ]);
-        if ($qrcode_model->id && file_exists($qrcode_model->file_path)) {
+        if ($qrcode_model->id && $qrcode_model->file_path && file_exists($qrcode_model->file_path)) {
             //如果存在
             return $qrcode_model;
         }

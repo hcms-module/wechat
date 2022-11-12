@@ -13,6 +13,17 @@ use App\Service\AbstractSettingService;
 
 class WechatSetting extends AbstractSettingService
 {
+
+    public function getWxpaySetting(string $key = '', $default = '')
+    {
+        return $this->getSettings('wxpay', $key, $default);
+    }
+
+    public function saveWxpaySetting(array $setting_data): bool
+    {
+        return $this->saveSetting($setting_data, 'wxpay');
+    }
+
     public function getWorkSetting(string $key = '', $default = '')
     {
         return $this->getSettings('wechat_work', $key, $default);
