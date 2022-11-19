@@ -16,7 +16,7 @@ class User extends AbstractOfficeComponent
 
     /**
      * @param string $redirect_url
-     * @param string $type 授权方式 snsapi_userinfo 获取用户信息，snsapi_base静默授权只获取open_id
+     * @param string $type 授权方式 snsapi_userinfo 获取用户信息，snsapi_base 静默授权只获取open_id
      * @return string
      */
     public function getOauthUrl(string $redirect_url = '', string $type = 'snsapi_userinfo'): string
@@ -32,12 +32,19 @@ class User extends AbstractOfficeComponent
      */
     public function oauth(string $code = ''): WechatOfficeUser
     {
-        $user = $this->service->getApp()->oauth->userFromCode($code);
-        $original_info = $user->getRaw();
+        $token = $this->service->getApp()->oauth->tokenFromCode($code);
+        $scope = $token['scope'] ?? 'snsapi_base';
+        $original_info = [];
+        if ($scope == 'snsapi_userinfo') {
+            $user = $this->service->getApp()->user->get($token['openid'] ?? '');
+            $original_info = $user->getRaw();
+        }
         $office_user = WechatOfficeUser::firstOrNew([
             'app_id' => $this->service->getAppId(),
-            'openid' => $original_info['openid'] ?? ''
+            'openid' => $token['openid'] ?? ''
         ]);
+
+        $office_user->openid = $token['openid'] ?? '';
         $office_user->nickname = $original_info['nickname'] ?? '';
         $office_user->sex = $original_info['sex'] ?? 0;
         $office_user->province = $original_info['province'] ?? '';

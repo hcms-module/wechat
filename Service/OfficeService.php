@@ -12,6 +12,7 @@ namespace App\Application\Wechat\Service;
 use App\Application\Wechat\Model\WechatApp;
 use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Application\Wechat\Service\Office\Jssdk;
+use App\Application\Wechat\Service\Office\Material;
 use App\Application\Wechat\Service\Office\Message;
 use App\Application\Wechat\Service\Office\Qrcode;
 use App\Application\Wechat\Service\Office\Template;
@@ -26,6 +27,7 @@ use EasyWeChat\OfficialAccount\Application;
  * @method Message message()
  * @method Template template()
  * @method Qrcode qrcode()
+ * @method Material material()
  */
 class OfficeService
 {

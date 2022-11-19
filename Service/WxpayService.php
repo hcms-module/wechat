@@ -10,12 +10,14 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Keepa\Service\OrderPayService;
+use App\Application\Wechat\Event\WxpayPayNotifyEvent;
 use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Exception\ErrorException;
 use EasyWeChat\Factory;
 use EasyWeChat\Payment\Application;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Logger\LoggerFactory;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -33,6 +35,11 @@ class WxpayService
      */
     protected LoggerFactory $loggerFactory;
     protected LoggerInterface $logger;
+
+    /**
+     * @Inject
+     */
+    private EventDispatcherInterface $eventDispatcher;
 
     public function __construct()
     {
@@ -63,6 +70,8 @@ class WxpayService
     {
         $response = $this->app->handlePaidNotify(function ($message, $fail) {
             $this->logger->info('get notify', $message);
+            //微信支付回调事件
+            $this->eventDispatcher->dispatch(new WxpayPayNotifyEvent($message));
             if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
                 $out_trade_no = $message['out_trade_no'] ?? "";
                 //TODO 支付成功回调
@@ -117,7 +126,7 @@ class WxpayService
         string $trade_type = 'JSAPI'
     ): array {
         try {
-            $notify_url = url('keepa/notify/index', [], true);
+            $notify_url = url('wechat/notify/index', [], true);
             $order_data = [
                 'body' => $body,
                 'out_trade_no' => $out_trade_no,

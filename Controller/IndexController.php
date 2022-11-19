@@ -123,7 +123,7 @@ class IndexController extends AbstractController
      */
     function officeAuth()
     {
-        $redirect_url = url('wechat/index/callback', [], true);
+        $redirect_url = url('wechat/index/auth/callback', [], true);
         $office_service = new OfficeService();
 
         // snsapi_base 静默授权、snsapi_userinfo显示授权页面
