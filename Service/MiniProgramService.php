@@ -12,6 +12,8 @@ namespace App\Application\Wechat\Service;
 use App\Application\Wechat\Model\WechatApp;
 use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Application\Wechat\Service\Mini\channel;
+use App\Application\Wechat\Service\Mini\Content;
+use App\Application\Wechat\Service\Mini\Message;
 use App\Application\Wechat\Service\Mini\Qrcode;
 use App\Application\Wechat\Service\Mini\Shop;
 use App\Application\Wechat\Service\Mini\Subscribe;
@@ -30,6 +32,8 @@ use Psr\SimpleCache\InvalidArgumentException;
  * @method Subscribe subscribe()
  * @method Shop shop()
  * @method Channel channel()
+ * @method Content content()
+ * @method Message message()
  */
 class MiniProgramService
 {
@@ -61,10 +65,10 @@ class MiniProgramService
         }
         $this->app_id = $wechat_app->app_id;
         $config = ['app_id' => $wechat_app->app_id, 'secret' => $wechat_app->app_secret, 'response_type' => 'array'];
-        if (!$wechat_app->token) {
+        if ($wechat_app->token) {
             $config['token'] = $wechat_app->token;
         }
-        if (!$wechat_app->aes_key) {
+        if ($wechat_app->aes_key) {
             $config['aes_key'] = $wechat_app->aes_key;
         }
         $this->app = Factory::miniProgram($config);

@@ -18,5 +18,5 @@ return [
         'composer' => ['overtrue/wechat' => '^5.0'],
         'module' => []
     ],
-    'version' => '1.7.0'
+    'version' => '1.6.0'
 ];

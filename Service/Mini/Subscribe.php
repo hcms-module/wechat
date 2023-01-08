@@ -63,11 +63,12 @@ class Subscribe extends AbstractMiniComponent
         $model->status = WechatMinSubscribeSendRecord::STATUS_YES;
         $model->result = $ms_id;
 
-        return true;
+        return $model->save();
     }
 
     /**
      * 发送订阅消息
+     *
      * @param string $template_id
      * @param string $openid
      * @param string $page
@@ -100,10 +101,8 @@ class Subscribe extends AbstractMiniComponent
             throw new ErrorException($errmsg);
         }
         //发送成功
-        $ms_id = $res['msgid'] ?? '';
-
         $model->status = WechatMinSubscribeSendRecord::STATUS_YES;
-        $model->result = $ms_id;
+        $model->result = $res['msgid'] ?? '';
 
         return $model->save();
     }

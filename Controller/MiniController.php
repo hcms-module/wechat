@@ -14,12 +14,29 @@ use App\Application\Wechat\Service\MiniProgramService;
 use App\Controller\AbstractController;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
+use Hyperf\HttpServer\Annotation\RequestMapping;
 
 /**
  * @Controller(prefix="wechat/mini")
  */
 class MiniController extends AbstractController
 {
+
+    /**
+     * @RequestMapping("message/{app_key}")
+     */
+    function miniMessage(string $app_key = '')
+    {
+        try {
+            $service = new MiniProgramService($app_key);
+            $res = $service->message()
+                ->push();
+        } catch (\Throwable $exception) {
+            $res = $exception->getMessage();
+        }
+
+        return $res;
+    }
 
     /**
      * 发送统一模板消息，发送给公众号
