@@ -15,30 +15,22 @@ use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\HttpServer\Annotation\PostMapping;
 
-/**
- * @Middleware(AdminMiddleware::class)
- * @Controller(prefix="/wechat/wxpay")
- */
+#[Middleware(AdminMiddleware::class)]
+#[Controller(prefix: "/wechat/wxpay")]
 class WxpayController extends AbstractController
 {
 
-    /**
-     * @Inject()
-     */
+    #[Inject]
     protected WechatSetting $setting;
 
-    /**
-     * @GetMapping(path="index")
-     */
+    #[GetMapping("index")]
     public function index()
     {
         return "hello wechat/wxpay index";
     }
 
-    /**
-     * @Api()
-     * @PostMapping(path="setting")
-     */
+    #[Api]
+    #[PostMapping("setting")]
     public function settingSubmit()
     {
         $setting = $this->request->input('setting', []);
@@ -47,10 +39,8 @@ class WxpayController extends AbstractController
         return $res ? [] : $this->returnErrorJson();
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="setting/info")
-     */
+    #[Api]
+    #[GetMapping("setting/info")]
     public function settingInfo()
     {
         $setting = $this->setting->getWxpaySetting();
@@ -58,9 +48,9 @@ class WxpayController extends AbstractController
         return compact('setting');
     }
 
-    /**
-     * @View()
-     * @GetMapping(path="setting")
-     */
-    public function setting() { }
+    #[View]
+    #[GetMapping("setting")]
+    public function setting()
+    {
+    }
 }

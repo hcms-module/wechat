@@ -30,21 +30,21 @@ class WechatOpenworkCorp extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_openwork_corp';
+    protected ?string $table = 'wechat_openwork_corp';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['corpid', 'corp_name'];
+    protected array $fillable = ['corpid', 'corp_name'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'expires_in' => 'integer',
         'created_at' => 'datetime',

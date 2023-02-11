@@ -11,31 +11,30 @@ namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Event\MinEventMessageEvent;
 use App\Application\Wechat\Model\WechatMinEventMessage;
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
+use App\Exception\ErrorException;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Utils\Codec\Json;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class Message extends AbstractMiniComponent
 {
-    /**
-     * @Inject()
-     */
-    private EventDispatcherInterface $event_dispatcher;
+    #[Inject]
+    protected EventDispatcherInterface $event_dispatcher;
 
-    function push()
+    public function push(ServerRequestInterface $request): ResponseInterface
     {
         try {
-            $this->service->getApp()->server->push(function ($message) {
-                $this->handleMessage($message);
+            $server = $this->service->getApp()
+                ->getServer();
+            $message = $server->getRequestMessage($request);
+            $this->handleMessage($message->toArray());
 
-                return "SUCCESS";
-            });
-
-            return $this->service->getApp()->server->serve()
-                ->getContent();
+            return $server->serve();
         } catch (\Exception $exception) {
-
-            return $exception->getMessage();
+            throw new ErrorException($exception->getMessage());
         }
     }
 

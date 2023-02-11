@@ -11,6 +11,7 @@ namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Model\WechatMinPhone;
 use App\Application\Wechat\Model\WechatMinUser;
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Exception\ErrorException;
 
 class User extends AbstractMiniComponent
@@ -28,7 +29,7 @@ class User extends AbstractMiniComponent
      */
     function getPhoneByCode(string $code): WechatMinPhone
     {
-        $res = $this->service->getApp()->phone_number->getUserPhoneNumber($code);
+        $res = $this->service->postJson('/wxa/business/getuserphonenumber', compact('code'));
         $errcode = $res['errcode'] ?? -1;
         if ($errcode === 0) {
             $phone_info = $res['phone_info'] ?? [];
@@ -49,13 +50,16 @@ class User extends AbstractMiniComponent
 
     /**
      * 根据授权的code获取openid 或 unionid
+     *
      * @param string $code
      * @return WechatMinUser
      * @throws \Throwable
      */
     function getOpenIdByCode(string $code): WechatMinUser
     {
-        $res = $this->service->getApp()->auth->session($code);
+        $res = $this->service->getApp()
+            ->getUtils()
+            ->codeToSession($code);
         $session_key = $res['session_key'] ?? '';
         $openid = $res['openid'] ?? '';
         $unionid = $res['unionid'] ?? '';

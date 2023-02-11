@@ -14,9 +14,9 @@ declare(strict_types=1);
 return [
     'name' => '',
     'require' => [
-        'hcms_version' => '0.10.0',
-        'composer' => ['overtrue/wechat' => '^5.0'],
+        'hcms_version' => '3.0.0',
+        'composer' => ['w7corp/easywechat' => '^6.10'],
         'module' => []
     ],
-    'version' => '1.6.0'
+    'version' => '3.0.0'
 ];

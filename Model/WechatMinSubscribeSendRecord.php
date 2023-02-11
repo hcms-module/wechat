@@ -23,21 +23,21 @@ class WechatMinSubscribeSendRecord extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_min_subscribe_send_record';
+    protected ?string $table = 'wechat_min_subscribe_send_record';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'template_id', 'openid', 'page', 'post_data'];
+    protected array $fillable = ['app_id', 'template_id', 'openid', 'page', 'post_data'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'status' => 'integer',
         'created_at' => 'datetime',

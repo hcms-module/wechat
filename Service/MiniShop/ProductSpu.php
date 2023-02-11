@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Service\MiniShop;
 
+use App\Exception\ErrorException;
+
 class ProductSpu extends AbstractMiniShopComponent
 {
     /**
@@ -20,6 +22,7 @@ class ProductSpu extends AbstractMiniShopComponent
      * @param int $need_edit_spu
      * @param int $source
      * @return array
+     * @throws ErrorException
      */
     public function getList(
         int $status = 5,

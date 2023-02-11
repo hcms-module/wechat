@@ -15,8 +15,8 @@ use Hyperf\Event\Contract\ListenerInterface;
 
 /**
  * 根据自己的业务需要定义你希望的监听处理
- * @Listener()
  */
+#[Listener]
 class OfficeMessageListener implements ListenerInterface
 {
     public function listen(): array
@@ -26,7 +26,7 @@ class OfficeMessageListener implements ListenerInterface
         ];
     }
 
-    public function process(object $event)
+    public function process(object $event): void
     {
         //收到消息触发时间
 

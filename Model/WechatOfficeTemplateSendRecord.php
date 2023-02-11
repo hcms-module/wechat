@@ -24,21 +24,21 @@ class WechatOfficeTemplateSendRecord extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_office_template_send_record';
+    protected ?string $table = 'wechat_office_template_send_record';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'open_id', 'template_id', 'post_data', 'url', 'mini_program_appid'];
+    protected array $fillable = ['app_id', 'open_id', 'template_id', 'post_data', 'url', 'mini_program_appid'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'status' => 'integer',
         'created_at' => 'datetime',

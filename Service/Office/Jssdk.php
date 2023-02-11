@@ -9,6 +9,10 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Service\Office;
 
+use App\Application\Wechat\Service\Lib\AbstractOfficeComponent;
+use App\Exception\ErrorException;
+use Psr\SimpleCache\InvalidArgumentException;
+
 class Jssdk extends AbstractOfficeComponent
 {
     /**
@@ -16,14 +20,21 @@ class Jssdk extends AbstractOfficeComponent
      * @param array  $apis
      * @param bool   $debug
      * @return array
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \Throwable
+     * @throws ErrorException
      */
     function getConfig(string $url, array $apis = [], bool $debug = false): array
     {
-        $this->service->getApp()->jssdk->setUrl($url);
-        $res = $this->service->getApp()->jssdk->buildConfig($apis, $debug, false, false);
+        try {
+            $utils = $this->service->getApp()
+                ->getUtils();
 
-        return $res ?: [];
+            $res = $utils->buildJsSdkConfig(url: $url, jsApiList: $apis, debug: $debug);
+
+            return $res ?: [];
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        } catch (InvalidArgumentException $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
     }
 }

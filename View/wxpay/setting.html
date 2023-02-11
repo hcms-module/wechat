@@ -9,24 +9,24 @@
         </template>
         <div>
             <el-form :model="form" label-width="80px">
-                <el-form-item prop="app_id" :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]"
-                              label="app_id">
-                    <el-input v-model="form.app_id" placeholder=""></el-input>
-                </el-form-item>
-                <el-form-item prop="mch_id" :rules="[{ required: true, message: '请输入商户号', trigger: 'blur' }]"
+                <el-form-item prop="pay_mch_id" :rules="[{ required: true, message: '请输入商户号', trigger: 'blur' }]"
                               label="商户号">
-                    <el-input v-model="form.mch_id" placeholder=""></el-input>
+                    <el-input v-model="form.pay_mch_id" placeholder=""></el-input>
                 </el-form-item>
-                <el-form-item prop="key" :rules="[{ required: true, message: '请输入秘钥', trigger: 'blur' }]"
+                <el-form-item prop="pay_secret_key" :rules="[{ required: true, message: '请输入V3秘钥', trigger: 'blur' }]"
                               label="秘钥">
-                    <el-input v-model="form.key" placeholder=""></el-input>
+                    <el-input v-model="form.pay_secret_key" placeholder="请输入V3秘钥"></el-input>
                 </el-form-item>
-                <el-form-item prop="cert_path" label="公钥证书">
-                    <el-input style="width: 500px" :rows="4" v-model="form.cert_path" type="textarea"
+                <el-form-item prop="pay_v2_secret_key"
+                              label="v2秘钥">
+                    <el-input v-model="form.pay_v2_secret_key" placeholder="请输入V2秘钥，可选"></el-input>
+                </el-form-item>
+                <el-form-item prop="pay_cert_path" label="公钥证书">
+                    <el-input style="width: 500px" :rows="4" v-model="form.pay_cert_path" type="textarea"
                               placeholder=""></el-input>
                 </el-form-item>
-                <el-form-item prop="key_path" label="私钥证书">
-                    <el-input style="width: 500px" :rows="4" v-model="form.key_path" type="textarea"
+                <el-form-item prop="pay_key_path" label="私钥证书">
+                    <el-input style="width: 500px" :rows="4" v-model="form.pay_key_path" type="textarea"
                               placeholder=""></el-input>
                 </el-form-item>
                 <el-form-item>

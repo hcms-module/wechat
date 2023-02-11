@@ -7,16 +7,23 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Wechat\Service\Office;
+namespace App\Application\Wechat\Service\Lib;
 
 use App\Application\Wechat\Service\OfficeService;
+use EasyWeChat\Kernel\HttpClient\AccessTokenAwareClient;
 
 abstract class AbstractOfficeComponent
 {
     protected OfficeService $service;
+    protected AccessTokenAwareClient $api_client;
 
     /**
      * @param OfficeService $service
      */
-    public function __construct(OfficeService $service) { $this->service = $service; }
+    public function __construct(OfficeService $service)
+    {
+        $this->service = $service;
+        $this->api_client = $this->service->getApp()
+            ->getClient();
+    }
 }

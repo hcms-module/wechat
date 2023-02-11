@@ -10,8 +10,6 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatOpenworkCorp;
-use App\Application\Wechat\Service\Lib\WechatRequest;
-use EasyWeChat\Factory;
 use EasyWeChat\OpenWork\Application;
 use Hyperf\Di\Annotation\Inject;
 
@@ -21,9 +19,7 @@ use Hyperf\Di\Annotation\Inject;
 class OpenWorkService
 {
 
-    /**
-     * @Inject()
-     */
+    #[Inject]
     protected WechatSetting $wechat_setting;
     protected Application $app;
 
@@ -32,15 +28,14 @@ class OpenWorkService
         $work_setting = $this->wechat_setting->getWorkSetting();
         $config = [
             'corp_id' => $work_setting['wechat_openwork_corpid'] ?? '',
-            'secret' => $work_setting['wechat_openwork_secret'] ?? '',
+            'provider_secret' => $work_setting['wechat_openwork_secret'] ?? '',
             'suite_id' => $work_setting['wechat_work_suite_id'] ?? '',
             'suite_secret' => $work_setting['wechat_work_secret'] ?? '',
             'token' => $work_setting['wechat_work_token'] ?? '',
             'aes_key' => $work_setting['wechat_work_aes_key'] ?? '',
         ];
 
-        $this->app = Factory::openWork($config);
-        $this->app['request'] = new WechatRequest();
+        $this->app = new Application($config);
     }
 
     /**
@@ -49,14 +44,5 @@ class OpenWorkService
     public function getApp(): Application
     {
         return $this->app;
-    }
-
-    public function getWork($corpid): \EasyWeChat\OpenWork\Work\Application
-    {
-        $permanent_code = WechatOpenworkCorp::where('corpid', $corpid)
-            ->value('permanent_code', '');
-
-        return $this->getApp()
-            ->work($corpid, $permanent_code);
     }
 }

@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Service\Channel;
 
+use App\Application\Wechat\Service\Lib\AbstractMiniChannelComponent;
+use App\Exception\ErrorException;
+
 class Product extends AbstractMiniChannelComponent
 {
 
@@ -18,6 +21,7 @@ class Product extends AbstractMiniChannelComponent
      * @param string $product_id
      * @param int    $data_type
      * @return array
+     * @throws ErrorException
      */
     public function getDetail(string $product_id, int $data_type = 1): array
     {

@@ -16,16 +16,14 @@ use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\RequestMapping;
 
-/**
- * @Controller(prefix="/wechat/office")
- */
-class IndexController extends AbstractController
+#[Controller(prefix: "/wechat/office")]
+class OfficeController extends AbstractController
 {
     /**
      * 生成参数二维码示例
-     * @Api()
-     * @GetMapping(path="qrcode")
      */
+    #[Api]
+    #[GetMapping("qrcode")]
     function qrcode()
     {
         try {
@@ -36,15 +34,15 @@ class IndexController extends AbstractController
 
             return $this->returnSuccessJson(compact('qrcode'));
         } catch (\Throwable $exception) {
-            return $exception->getMessage();
+            return $this->returnErrorJson($exception->getMessage());
         }
     }
 
     /**
      * 发送模板消息
-     * @Api()
-     * @GetMapping(path="template")
      */
+    #[Api]
+    #[GetMapping("template")]
     function template()
     {
         try {
@@ -56,7 +54,8 @@ class IndexController extends AbstractController
             $url = 'url';
             $mini_program_appid = 'mini_program_appid';
             $res = $office_service->template()
-                ->sendTemplateMsg($open_id, $template_id, $data, $url, $mini_program_appid);
+                ->sendTemplateMsg(open_id: $open_id, template_id: $template_id, data: $data, url: $url,
+                    mini_program_appid: $mini_program_appid);
 
             return $res ? [] : $this->returnErrorJson();
         } catch (\Throwable $exception) {
@@ -66,15 +65,15 @@ class IndexController extends AbstractController
 
     /**
      * 公众号消息触发机制
-     * @RequestMapping(path="message")
      */
+    #[RequestMapping("message")]
     function officeMessage(string $app_key = '')
     {
         try {
             // 如果是多个公众号可以加入app_key作为可选参数
             $office_service = new OfficeService($app_key);
             $res = $office_service->message()
-                ->push();
+                ->push($this->request);
         } catch (\Throwable $exception) {
             $res = $exception->getMessage();
         }
@@ -82,10 +81,8 @@ class IndexController extends AbstractController
         return $res;
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="jssdk")
-     */
+    #[Api]
+    #[GetMapping("jssdk")]
     function getJssdk()
     {
         $url = $this->request->input('url', $this->request->url());
@@ -100,9 +97,7 @@ class IndexController extends AbstractController
         }
     }
 
-    /**
-     * @GetMapping(path="auth/callback")
-     */
+    #[GetMapping("auth/callback")]
     function officeAuthCallBack()
     {
         $office_service = new OfficeService();
@@ -118,12 +113,10 @@ class IndexController extends AbstractController
         }
     }
 
-    /**
-     * @GetMapping(path="auth")
-     */
+    #[GetMapping("auth")]
     function officeAuth()
     {
-        $redirect_url = url('wechat/index/auth/callback', [], true);
+        $redirect_url = url('wechat/office/auth/callback', [], true);
         $office_service = new OfficeService();
 
         // snsapi_base 静默授权、snsapi_userinfo显示授权页面

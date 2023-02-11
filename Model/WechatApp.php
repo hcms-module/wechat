@@ -26,21 +26,21 @@ class WechatApp extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_app';
+    protected ?string $table = 'wechat_app';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_key', 'app_id', 'app_secret', 'token', 'aes_key'];
+    protected array $fillable = ['app_key', 'app_id', 'app_secret', 'token', 'aes_key'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'app_type' => 'integer',
         'created_at' => 'datetime',

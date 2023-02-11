@@ -13,40 +13,44 @@ use App\Application\Wechat\Event\OfficeEventMessageEvent;
 use App\Application\Wechat\Event\OfficeMessageEvent;
 use App\Application\Wechat\Model\WechatOfficeEventMessage;
 use App\Application\Wechat\Model\WechatOfficeMessage;
+use App\Application\Wechat\Service\Lib\AbstractOfficeComponent;
+use App\Exception\ErrorException;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Utils\Codec\Json;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class Message extends AbstractOfficeComponent
 {
-    /**
-     * @Inject()
-     */
-    private EventDispatcherInterface $event_dispatcher;
+    #[Inject]
+    protected EventDispatcherInterface $event_dispatcher;
 
     /**
      * 公众号服务消息处理
+     * Hyperf 请求对象经过处理，所以EasyWechat的Request需要被重写
      *
-     * @return string
+     * @param ServerRequestInterface $request
+     * @return ResponseInterface
+     * @throws ErrorException
      */
-    public function push(): string
+    public function push(ServerRequestInterface $request): ResponseInterface
     {
         try {
-            $this->service->getApp()->server->push(function ($message) {
-                $msg_type = $message['MsgType'] ?? '';
-                if ($msg_type === 'event') {
-                    $this->handleEventMessage($message);
-                } else {
-                    $this->handleMessage($message);
-                }
+            $server = $this->service->getApp()
+                ->getServer();
+            $message = $server->getRequestMessage($request)
+                ->toArray();
+            $msg_type = $message['MsgType'] ?? '';
+            if ($msg_type === 'event') {
+                $this->handleEventMessage($message);
+            } else {
+                $this->handleMessage($message);
+            }
 
-                return "SUCCESS";
-            });
-
-            return $this->service->getApp()->server->serve()
-                ->getContent();
-        } catch (\Exception $exception) {
-            return $exception->getMessage();
+            return $server->serve();
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
         }
     }
 

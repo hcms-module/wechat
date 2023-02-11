@@ -10,18 +10,33 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Office;
 
 use App\Application\Wechat\Model\WechatOfficeUser;
+use App\Application\Wechat\Service\Lib\AbstractOfficeComponent;
+use App\Application\Wechat\Service\OfficeService;
+use Overtrue\Socialite\Contracts\ProviderInterface;
 
 class User extends AbstractOfficeComponent
 {
+    protected ProviderInterface $oauth;
+
+    public function __construct(OfficeService $service)
+    {
+        parent::__construct($service);
+        $this->oauth = $this->service->getApp()
+            ->getOAuth();
+    }
 
     /**
+     *  授权方式 snsapi_userinfo 获取用户信息，snsapi_base 静默授权只获取open_id
+     *
      * @param string $redirect_url
-     * @param string $type 授权方式 snsapi_userinfo 获取用户信息，snsapi_base 静默授权只获取open_id
+     * @param string $type
+     * @param string $state
      * @return string
+     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
      */
-    public function getOauthUrl(string $redirect_url = '', string $type = 'snsapi_userinfo'): string
+    public function getOauthUrl(string $redirect_url = '', string $type = 'snsapi_userinfo', string $state = ''): string
     {
-        return $this->service->getApp()->oauth->scopes([$type])
+        return $this->oauth->scopes([$type])
             ->redirect($redirect_url);
     }
 
@@ -32,24 +47,14 @@ class User extends AbstractOfficeComponent
      */
     public function oauth(string $code = ''): WechatOfficeUser
     {
-        $token = $this->service->getApp()->oauth->tokenFromCode($code);
-        $scope = $token['scope'] ?? 'snsapi_base';
-        $original_info = [];
-        if ($scope == 'snsapi_userinfo') {
-            $user = $this->service->getApp()->user->get($token['openid'] ?? '');
-            $original_info = $user->getRaw();
-        }
+        $user = $this->oauth->userFromCode($code);
+        $original_info = $user->getRaw();
         $office_user = WechatOfficeUser::firstOrNew([
             'app_id' => $this->service->getAppId(),
-            'openid' => $token['openid'] ?? ''
+            'openid' => $user->getId(),
         ]);
-
-        $office_user->openid = $token['openid'] ?? '';
+        $office_user->openid = $user->getId();
         $office_user->nickname = $original_info['nickname'] ?? '';
-        $office_user->sex = $original_info['sex'] ?? 0;
-        $office_user->province = $original_info['province'] ?? '';
-        $office_user->city = $original_info['city'] ?? '';
-        $office_user->country = $original_info['country'] ?? '';
         $office_user->headimgurl = $original_info['headimgurl'] ?? '';
         $office_user->unionid = $original_info['unionid'] ?? '';
         $office_user->save();

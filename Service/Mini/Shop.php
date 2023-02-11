@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Service\Mini;
 
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Application\Wechat\Service\MiniShop\Order;
 use App\Application\Wechat\Service\MiniShop\ProductSpu;
 use App\Exception\ErrorException;

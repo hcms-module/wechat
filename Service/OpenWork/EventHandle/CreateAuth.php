@@ -25,7 +25,9 @@ class CreateAuth implements EventHandleInterface
     {
         $auth_code = $event_content['AuthCode'] ?? [];
         $open_work = new OpenWorkService();
-        $res = $open_work->getApp()->corp->getPermanentByCode($auth_code);
+        $res = $open_work->getApp()
+            ->getClient()
+            ->postJson('cgi-bin/service/get_permanent_code', ['auth_code' => $auth_code]);
         $errcode = $res['errcode'] ?? 0;
         $errmsg = $res['errmsg'] ?? '请求错误';
         if ($errcode != 0) {

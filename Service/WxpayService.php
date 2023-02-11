@@ -9,80 +9,111 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Service;
 
-use App\Application\Keepa\Service\OrderPayService;
 use App\Application\Wechat\Event\WxpayPayNotifyEvent;
-use App\Application\Wechat\Service\Lib\WechatRequest;
+use App\Application\Wechat\Event\WxpayRefundNotifyEvent;
 use App\Exception\ErrorException;
-use EasyWeChat\Factory;
-use EasyWeChat\Payment\Application;
+use EasyWeChat\Pay\Application;
+use EasyWeChat\Pay\Message;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Logger\LoggerFactory;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 class WxpayService
 {
-    /**
-     * @Inject()
-     * @var WechatSetting
-     */
+    #[Inject]
     protected WechatSetting $setting;
     protected Application $app;
 
-    /**
-     * @Inject()
-     */
+    #[Inject]
     protected LoggerFactory $loggerFactory;
     protected LoggerInterface $logger;
 
-    /**
-     * @Inject
-     */
-    private EventDispatcherInterface $eventDispatcher;
+    #[Inject]
+    protected EventDispatcherInterface $eventDispatcher;
 
     public function __construct()
     {
         $setting = $this->setting->getWxpaySetting();
         $config = [
             // 必要配置
-            'app_id' => $setting['app_id'] ?? '',
-            'mch_id' => $setting['mch_id'] ?? '',
-            'key' => $setting['key'] ?? '',   // API v2 密钥 (注意: 是v2密钥 是v2密钥 是v2密钥)
+            'mch_id' => $setting['pay_mch_id'] ?? '',
+            'secret_key' => $setting['pay_secret_key'] ?? '',   // API v3 密钥 (注意: 是v3密钥 是v3密钥 是v3密钥)
+            'v2_secret_key' => $setting['pay_v2_secret_key'] ?? '',
             // 如需使用敏感接口（如退款、发送红包等）需要配置 API 证书路径(登录商户平台下载 API 证书)
-            'cert_path' => $this->getTempFilePath($setting['cert_path'] ?? '', 'cert.pem'), // XXX: 绝对路径！！！！
-            'key_path' => $this->getTempFilePath($setting['key_path'] ?? '', 'key.pem'),      // XXX: 绝对路径！！！！
+            'certificate' => $this->getTempFilePath($setting['pay_cert_path'] ?? '', 'cert.pem'), // XXX: 绝对路径！！！！
+            'private_key' => $this->getTempFilePath($setting['pay_key_path'] ?? '', 'key.pem'),      // XXX: 绝对路径！！！！
         ];
-
-        $this->app = Factory::payment($config);
-        $this->app['request'] = new WechatRequest();
-
         $this->logger = $this->loggerFactory->get('notify', 'request');
+        try {
+            $this->app = new Application($config);
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
+    }
+
+
+    /**
+     * 退款回调
+     *
+     * @param ServerRequestInterface $request
+     * @return ResponseInterface
+     * @throws ErrorException
+     */
+    public function refund(ServerRequestInterface $request): ResponseInterface
+    {
+        try {
+            $server = $this->app->setRequest($request)
+                ->getServer();
+
+            $server->handleRefunded(function (Message $message) {
+                $message = $message->toArray();
+                $this->logger->info('get refund notify', $message->toArray());
+                //微信支付回调事件
+                $this->eventDispatcher->dispatch(new WxpayRefundNotifyEvent($message));
+                if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
+                    $out_trade_no = $message['out_trade_no'] ?? "";
+                    //TODO 支付成功回调
+                }
+            });
+
+            return $server->serve();
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
     }
 
     /**
      * 微信支付回调
      *
-     * @return false|string
-     * @throws \EasyWeChat\Kernel\Exceptions\Exception
+     * @param ServerRequestInterface $request
+     * @return ResponseInterface
+     * @throws ErrorException
      */
-    public function notify()
+    public function notify(ServerRequestInterface $request): ResponseInterface
     {
-        $response = $this->app->handlePaidNotify(function ($message, $fail) {
-            $this->logger->info('get notify', $message);
-            //微信支付回调事件
-            $this->eventDispatcher->dispatch(new WxpayPayNotifyEvent($message));
-            if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
-                $out_trade_no = $message['out_trade_no'] ?? "";
-                //TODO 支付成功回调
-            } else {
-                return $fail('支付失败，请稍后再通知我');
-            }
+        try {
+            $server = $this->app->setRequest($request)
+                ->getServer();
 
-            return true;
-        });
+            $server->handlePaid(function (Message $message) {
+                $message = $message->toArray();
+                $this->logger->info('get notify', $message->toArray());
+                //微信支付回调事件
+                $this->eventDispatcher->dispatch(new WxpayPayNotifyEvent($message));
+                if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
+                    $out_trade_no = $message['out_trade_no'] ?? "";
+                    //TODO 支付成功回调
+                }
+            });
 
-        return $response->getContent();
+            return $server->serve();
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
     }
 
     /**

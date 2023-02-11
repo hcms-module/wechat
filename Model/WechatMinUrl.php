@@ -23,21 +23,21 @@ class WechatMinUrl extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_min_url';
+    protected ?string $table = 'wechat_min_url';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'query', 'path', 'env_version'];
+    protected array $fillable = ['app_id', 'query', 'path', 'env_version'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'is_expire' => 'integer',
         'expire_time' => 'integer',

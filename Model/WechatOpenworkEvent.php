@@ -19,25 +19,25 @@ use Hyperf\DbConnection\Model\Model;
 class WechatOpenworkEvent extends Model
 {
 
-    protected $primaryKey = 'event_id';
+    protected string $primaryKey = 'event_id';
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_openwork_event';
+    protected ?string $table = 'wechat_openwork_event';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['suite_id', 'info_type', 'event_content'];
+    protected array $fillable = ['suite_id', 'info_type', 'event_content'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'event_id' => 'integer',
         'handle_res' => 'integer',
         'created_at' => 'datetime',
