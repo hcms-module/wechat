@@ -13,6 +13,7 @@ use App\Application\Wechat\Model\WechatApp;
 use App\Application\Wechat\Service\Mini\channel;
 use App\Application\Wechat\Service\Mini\Content;
 use App\Application\Wechat\Service\Mini\Message;
+use App\Application\Wechat\Service\Mini\Pay;
 use App\Application\Wechat\Service\Mini\Qrcode;
 use App\Application\Wechat\Service\Mini\Shop;
 use App\Application\Wechat\Service\Mini\Subscribe;
@@ -30,6 +31,7 @@ use EasyWeChat\MiniApp\Application;
  * @method Channel channel()
  * @method Content content()
  * @method Message message()
+ * @method Pay pay()
  */
 class MiniProgramService
 {

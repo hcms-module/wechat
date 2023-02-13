@@ -30,6 +30,12 @@ return [
                 'is_menu' => 1
             ],
             [
+                'access_name' => '微信支付',
+                'uri' => 'wechat/wxpay/setting',
+                'sort' => 100,
+                'is_menu' => 1
+            ],
+            [
                 'access_name' => '企业微信',
                 'uri' => 'wechat/wechat/work',
                 'sort' => 100,

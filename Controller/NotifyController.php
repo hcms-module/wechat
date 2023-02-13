@@ -31,7 +31,7 @@ class NotifyController extends AbstractController
         try {
             $wxpay_service = new WxpayService();
 
-            return $wxpay_service->refund($this->request);
+            return $wxpay_service->refundNotify($this->request);
         } catch (\Throwable $exception) {
             return $this->response->raw($exception->getMessage());
         }

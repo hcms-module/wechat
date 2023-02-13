@@ -13,6 +13,7 @@ use App\Application\Wechat\Event\WxpayPayNotifyEvent;
 use App\Application\Wechat\Event\WxpayRefundNotifyEvent;
 use App\Exception\ErrorException;
 use EasyWeChat\Pay\Application;
+use EasyWeChat\Pay\Client;
 use EasyWeChat\Pay\Message;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Logger\LoggerFactory;
@@ -20,6 +21,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\Exception\ClientException;
 use Throwable;
 
 class WxpayService
@@ -50,7 +52,27 @@ class WxpayService
         $this->logger = $this->loggerFactory->get('notify', 'request');
         try {
             $this->app = new Application($config);
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
+    }
+
+    protected function postJson(string $uri, array $data): array
+    {
+        try {
+            $api = $this->app->getClient();
+            if ($api instanceof Client) {
+                $result = $api->postJson($uri, [
+                    'json' => $data,
+                ]);
+
+                return $result->toArray();
+            } else {
+                throw new ErrorException('获取接口对象错误');
+            }
+        } catch (ClientException $exception) {
+            throw new ErrorException("连接错误，请检查支付配置是否正确。" . $exception->getMessage());
+        } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
     }
@@ -63,7 +85,7 @@ class WxpayService
      * @return ResponseInterface
      * @throws ErrorException
      */
-    public function refund(ServerRequestInterface $request): ResponseInterface
+    public function refundNotify(ServerRequestInterface $request): ResponseInterface
     {
         try {
             $server = $this->app->setRequest($request)
@@ -76,12 +98,12 @@ class WxpayService
                 $this->eventDispatcher->dispatch(new WxpayRefundNotifyEvent($message));
                 if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
                     $out_trade_no = $message['out_trade_no'] ?? "";
-                    //TODO 支付成功回调
+                    //TODO 退款成功回调
                 }
             });
 
             return $server->serve();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
     }
@@ -111,76 +133,82 @@ class WxpayService
             });
 
             return $server->serve();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
     }
 
     /**
-     *  获取小程序支付配置
+     * 获取小程序支付配置
      *
+     * @param string $app_id
      * @param string $open_id
      * @param string $out_trade_no
      * @param int    $total_fee
-     * @param string $body
-     * @return array|string
+     * @param string $description
+     * @return array
      * @throws ErrorException
      */
-    public function getJssdkPay(
+    public function getMiniAppConfig(
+        string $app_id,
         string $open_id,
         string $out_trade_no,
         int $total_fee,
-        string $body = ''
-    ) {
-        $unify_info = $this->unify($open_id, $out_trade_no, $total_fee, $body);
-        $prepay_id = $unify_info['prepay_id'] ?? '';
+        string $description = ''
+    ): array {
+        try {
+            $prepay_id = $this->unifyJsApi($app_id, $open_id, $out_trade_no, $total_fee, $description);
+            $utils = $this->app->getUtils();
 
-        return $this->app->jssdk->bridgeConfig($prepay_id, false);
+            return $utils->buildMiniAppConfig($prepay_id, $app_id);
+        } catch (Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
     }
 
     /**
      * 统一下单接口
      *
+     * @param string $app_id
      * @param string $open_id
      * @param string $out_trade_no
      * @param int    $total_fee
-     * @param string $body
-     * @param string $trade_type
-     * @return array
+     * @param string $description
+     * @return string
      * @throws ErrorException
      */
-    public function unify(
+    public function unifyJsApi(
+        string $app_id,
         string $open_id,
         string $out_trade_no,
         int $total_fee,
-        string $body = '',
-        string $trade_type = 'JSAPI'
-    ): array {
+        string $description = ''
+    ): string {
         try {
             $notify_url = url('wechat/notify/index', [], true);
-            $order_data = [
-                'body' => $body,
+            $data = [
+                'appid' => $app_id,
+                'mchid' => $this->app->getConfig()
+                    ->get('mch_id'),
+                'description' => $description,
                 'out_trade_no' => $out_trade_no,
-                'total_fee' => $total_fee,
-                'trade_type' => $trade_type, // 请对应换成你的支付方式对应的值类型
-                'openid' => $open_id,
-                'notify_url' => $notify_url
+                'notify_url' => $notify_url,
+                'amount' => [
+                    'total' => $total_fee,
+                ],
+                'payer' => [
+                    'openid' => $open_id,
+                ],
             ];
-            $result = $this->app->order->unify($order_data);
-            $this->logger->info('wxpay unify ', $order_data);
-            $return_code = $result['return_code'] ?? 'FAIL';
-            if ($return_code != 'SUCCESS') {
-                throw new ErrorException('创建支付订单失败：' . $result['return_msg'] ?? "");
-            }
-
+            $result = $this->postJson('/v3/pay/transactions/jsapi', $data);
             $prepay_id = $result['prepay_id'] ?? "";
             if ($prepay_id == '') {
-                throw new ErrorException('创建支付订单失败：' . $result['err_code_des'] ?? "");
+                throw new ErrorException('创建支付订单失败2：' . $result['err_code_des'] ?? "");
             }
 
-            return $result;
-        } catch (\Throwable $exception) {
-            throw new ErrorException('创建支付订单失败：' . $exception->getMessage());
+            return $prepay_id;
+        } catch (Throwable $exception) {
+            throw new ErrorException('创建支付订单失败3：' . $exception->getMessage());
         }
     }
 
