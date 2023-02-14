@@ -11,12 +11,15 @@ namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Event\WxpayPayNotifyEvent;
 use App\Application\Wechat\Event\WxpayRefundNotifyEvent;
+use App\Application\Wechat\Model\WechatPayOrder;
+use App\Application\Wechat\Model\WechatPayOrderRefund;
 use App\Exception\ErrorException;
 use EasyWeChat\Pay\Application;
 use EasyWeChat\Pay\Client;
 use EasyWeChat\Pay\Message;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Logger\LoggerFactory;
+use Hyperf\Utils\Codec\Json;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,6 +39,8 @@ class WxpayService
 
     #[Inject]
     protected EventDispatcherInterface $eventDispatcher;
+
+    protected string $mchid = '';
 
     public function __construct()
     {
@@ -57,14 +62,18 @@ class WxpayService
         }
     }
 
-    protected function postJson(string $uri, array $data): array
+    protected function requestJson(string $uri, array $data = [], string $method = "POST"): array
     {
         try {
             $api = $this->app->getClient();
             if ($api instanceof Client) {
-                $result = $api->postJson($uri, [
-                    'json' => $data,
-                ]);
+                if ($method == "POST") {
+                    $result = $api->postJson($uri, [
+                        'json' => $data,
+                    ]);
+                } else {
+                    $result = $api->get($uri);
+                }
 
                 return $result->toArray();
             } else {
@@ -76,7 +85,6 @@ class WxpayService
             throw new ErrorException($exception->getMessage());
         }
     }
-
 
     /**
      * 退款回调
@@ -94,18 +102,84 @@ class WxpayService
             $server->handleRefunded(function (Message $message) {
                 $message = $message->toArray();
                 $this->logger->info('get refund notify', $message->toArray());
-                //微信支付回调事件
+                //微信支付回调事件，最好是通过  getRefundByOutRefundNo 方法获取最终的退款信息
                 $this->eventDispatcher->dispatch(new WxpayRefundNotifyEvent($message));
-                if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
-                    $out_trade_no = $message['out_trade_no'] ?? "";
-                    //TODO 退款成功回调
-                }
             });
 
             return $server->serve();
         } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
+    }
+
+    /**
+     * @param string $out_refund_no
+     * @return WechatPayOrderRefund
+     * @throws ErrorException
+     */
+    public function getRefundByOutRefundNo(string $out_refund_no): WechatPayOrderRefund
+    {
+        $uri = "/v3/refund/domestic/refunds/{$out_refund_no}";
+        $res = $this->requestJson($uri, method: "GET");
+        $order_refund = WechatPayOrderRefund::firstOrCreate(compact('out_refund_no'));
+        $order_refund->transaction_id = $res['transaction_id'] ?? '';
+        $order_refund->refund_id = $res['refund_id'] ?? '';
+        $order_refund->channel = $res['channel'] ?? '';
+        $order_refund->status = $res['status'] ?? '';
+        $order_refund->refund_fee = $res['amount']['refund'] ?? 0;
+        $order_refund->total = $res['amount']['total'] ?? 0;
+        $order_refund->meta_info = Json::encode($res ?: "{}");
+        $order_refund->save();
+
+        return $order_refund;
+    }
+
+    /**
+     * @param string $out_trade_no
+     * @param int    $refund_fee
+     * @param string $out_refund_no
+     * @param string $reason
+     * @return WechatPayOrderRefund
+     * @throws ErrorException
+     */
+    public function refund(
+        string $out_trade_no,
+        int $refund_fee,
+        string $out_refund_no = '',
+        string $reason = ''
+    ): WechatPayOrderRefund {
+        $order = $this->getOrderByOutTradeNo($out_trade_no);
+        $order_meta = $order->meta_info;
+        $notify_url = url('wechat/notify/refund', [], true);
+        $uri = "/v3/refund/domestic/refunds";
+        if ($out_refund_no === '') {
+            $out_refund_no = 'refund_' . $out_trade_no . '_' . rand(1000, 9999);
+        }
+        $data = [
+            'out_trade_no' => $out_trade_no,
+            'out_refund_no' => $out_refund_no,
+            'notify_url' => $notify_url,
+            'amount' => [
+                'refund' => $refund_fee,
+                'total' => $order->total_fee,
+                'currency' => $order_meta['amount']['currency'] ?? 'CNY'
+            ],
+        ];
+        if ($reason !== '') {
+            $data['reason'] = $reason;
+        }
+        $res = $this->requestJson($uri, $data);
+        $order_refund = WechatPayOrderRefund::firstOrCreate(compact('out_trade_no', 'out_refund_no'));
+        $order_refund->transaction_id = $res['transaction_id'] ?? '';
+        $order_refund->refund_id = $res['refund_id'] ?? '';
+        $order_refund->channel = $res['channel'] ?? '';
+        $order_refund->status = $res['status'] ?? '';
+        $order_refund->refund_fee = $res['amount']['refund'] ?? 0;
+        $order_refund->total = $res['amount']['total'] ?? 0;
+        $order_refund->meta_info = Json::encode($res ?: "{}");
+        $order_refund->save();
+
+        return $order_refund;
     }
 
     /**
@@ -124,18 +198,44 @@ class WxpayService
             $server->handlePaid(function (Message $message) {
                 $message = $message->toArray();
                 $this->logger->info('get notify', $message->toArray());
-                //微信支付回调事件
+                //微信支付回调事件，建议使用 getOrderByOutTradeNo 查看订单是否支付成功
                 $this->eventDispatcher->dispatch(new WxpayPayNotifyEvent($message));
-                if ($message['return_code'] === 'SUCCESS' && $message['result_code'] === 'SUCCESS') {
-                    $out_trade_no = $message['out_trade_no'] ?? "";
-                    //TODO 支付成功回调
-                }
             });
 
             return $server->serve();
         } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
+    }
+
+    /**
+     * 获取订单状态
+     *
+     * @param string $out_trade_no
+     * @return WechatPayOrder
+     * @throws ErrorException
+     */
+    function getOrderByOutTradeNo(string $out_trade_no): WechatPayOrder
+    {
+        $uri = "/v3/pay/transactions/out-trade-no/{$out_trade_no}?mchid=" . $this->getMchid();
+        $res = $this->requestJson($uri, method: "GET");
+        $mchid = $res['mchid'] ?? '';
+        $out_trade_no = $res['out_trade_no'] ?? '';
+        $order = WechatPayOrder::firstOrCreate([
+            'mchid' => $mchid,
+            'out_trade_no' => $out_trade_no,
+        ]);
+        $order->appid = $res['appid'] ?? '';
+        $order->openid = $res['payer']['openid'] ?? '';
+        $order->total_fee = $res['amount']['total'] ?? 0;
+        $order->trade_state = $res['trade_state'] ?? 'NOTPAY';
+        $order->trade_state_desc = $res['trade_state_desc'] ?? '';
+        $order->trade_type = $res['trade_type'] ?? '';
+        $order->transaction_id = $res['transaction_id'] ?? '';
+        $order->meta_info = Json::encode($res);
+        $order->save();
+
+        return $order;
     }
 
     /**
@@ -166,11 +266,12 @@ class WxpayService
         }
     }
 
+
     /**
      * 统一下单接口
      *
-     * @param string $app_id
-     * @param string $open_id
+     * @param string $appid
+     * @param string $openid
      * @param string $out_trade_no
      * @param int    $total_fee
      * @param string $description
@@ -178,8 +279,8 @@ class WxpayService
      * @throws ErrorException
      */
     public function unifyJsApi(
-        string $app_id,
-        string $open_id,
+        string $appid,
+        string $openid,
         string $out_trade_no,
         int $total_fee,
         string $description = ''
@@ -187,9 +288,8 @@ class WxpayService
         try {
             $notify_url = url('wechat/notify/index', [], true);
             $data = [
-                'appid' => $app_id,
-                'mchid' => $this->app->getConfig()
-                    ->get('mch_id'),
+                'appid' => $appid,
+                'mchid' => $this->getMchid(),
                 'description' => $description,
                 'out_trade_no' => $out_trade_no,
                 'notify_url' => $notify_url,
@@ -197,14 +297,26 @@ class WxpayService
                     'total' => $total_fee,
                 ],
                 'payer' => [
-                    'openid' => $open_id,
+                    'openid' => $openid,
                 ],
             ];
-            $result = $this->postJson('/v3/pay/transactions/jsapi', $data);
+            $result = $this->requestJson('/v3/pay/transactions/jsapi', $data);
             $prepay_id = $result['prepay_id'] ?? "";
             if ($prepay_id == '') {
                 throw new ErrorException('创建支付订单失败2：' . $result['err_code_des'] ?? "");
             }
+            //创建成功，存入数据。
+            $pay_order = WechatPayOrder::firstOrCreate([
+                'appid' => $appid,
+                'mchid' => $data['mchid'] ?? '',
+                'out_trade_no' => $out_trade_no
+            ]);
+            $pay_order->openid = $openid;
+            $pay_order->total_fee = $total_fee;
+            $pay_order->notify_url = $notify_url;
+            $pay_order->description = $description;
+            $pay_order->prepay_id = $prepay_id;
+            $pay_order->save();
 
             return $prepay_id;
         } catch (Throwable $exception) {
@@ -231,5 +343,29 @@ class WxpayService
         }
 
         return $file_path;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMchid(): string
+    {
+        if ($this->mchid == '') {
+            $this->mchid = $this->app->getConfig()
+                    ->get('mch_id') . '';
+        }
+
+        return $this->mchid;
+    }
+
+    /**
+     * @param string $mchid
+     * @return $this
+     */
+    public function setMchid(string $mchid): self
+    {
+        $this->mchid = $mchid;
+
+        return $this;
     }
 }
