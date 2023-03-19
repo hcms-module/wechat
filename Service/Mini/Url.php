@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Model\WechatMinUrl;
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Exception\ErrorException;
 
 class Url extends AbstractMiniComponent
@@ -46,7 +47,7 @@ class Url extends AbstractMiniComponent
         }
         $is_expire = $expire_time !== 0;
         $expire_time = time() + $expire_time;
-        $res = $this->service->getApp()->url_link->generate([
+        $res = $this->service->postJson('/wxa/generate_urllink', [
             'query' => $query,
             'path' => $path,
             'is_expire' => $is_expire,

@@ -30,15 +30,15 @@ class WechatMinEventMessage extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_min_event_message';
+    protected ?string $table = 'wechat_min_event_message';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = [
+    protected array $fillable = [
         'app_id',
         'to_user_name',
         'from_user_name',
@@ -59,7 +59,7 @@ class WechatMinEventMessage extends Model
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'create_time' => 'integer',
         'version' => 'integer',

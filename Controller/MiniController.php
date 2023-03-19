@@ -16,21 +16,18 @@ use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\RequestMapping;
 
-/**
- * @Controller(prefix="wechat/mini")
- */
+
+#[Controller(prefix: "wechat/mini")]
 class MiniController extends AbstractController
 {
 
-    /**
-     * @RequestMapping("message/{app_key}")
-     */
+    #[RequestMapping("message/{app_key}")]
     function miniMessage(string $app_key = '')
     {
         try {
             $service = new MiniProgramService($app_key);
             $res = $service->message()
-                ->push();
+                ->push($this->request);
         } catch (\Throwable $exception) {
             $res = $exception->getMessage();
         }
@@ -38,11 +35,22 @@ class MiniController extends AbstractController
         return $res;
     }
 
+    #[Api]
+    #[GetMapping("check")]
+    function check()
+    {
+        $service = new MiniProgramService();
+        $res = $service->content()
+            ->checkText("test content");
+
+        return $res;
+    }
+
     /**
      * 发送统一模板消息，发送给公众号
-     * @Api()
-     * @GetMapping(path="uniform")
      */
+    #[Api]
+    #[GetMapping("uniform")]
     public function uniform()
     {
         $template_id = 'template_id';
@@ -59,9 +67,9 @@ class MiniController extends AbstractController
 
     /**
      * 发送订阅消息
-     * @Api()
-     * @GetMapping(path="subscribe")
      */
+    #[Api]
+    #[GetMapping("subscribe")]
     public function subscribe()
     {
         $template_id = 'template_id';
@@ -75,9 +83,7 @@ class MiniController extends AbstractController
         return [];
     }
 
-    /**
-     * @GetMapping(path="scene")
-     */
+    #[GetMapping("scene")]
     public function handScene()
     {
         //处理参数 scene 一般我们使用小程序码、url_link都是通过该指定到首页并通过scene来告知前端需要跳转的目标页面。
@@ -87,10 +93,8 @@ class MiniController extends AbstractController
         ];
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="url")
-     */
+    #[Api]
+    #[GetMapping("url")]
     public function url()
     {
         $mini_service = new MiniProgramService();
@@ -100,10 +104,8 @@ class MiniController extends AbstractController
         return $res->toArray();
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="qrcode")
-     */
+    #[Api]
+    #[GetMapping("qrcode")]
     public function qrcode()
     {
         $mini_service = new MiniProgramService();
@@ -113,10 +115,8 @@ class MiniController extends AbstractController
         return $res->toArray();
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="login")
-     */
+    #[Api]
+    #[GetMapping("login")]
     public function login()
     {
         $code = $this->request->input('code', '');
@@ -128,10 +128,8 @@ class MiniController extends AbstractController
             ->toArray();
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="phone")
-     */
+    #[Api]
+    #[GetMapping("phone")]
     public function phone()
     {
         $code = $this->request->input('code', '');

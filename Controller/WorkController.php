@@ -15,19 +15,13 @@ use Hyperf\HttpServer\Annotation\RequestMapping;
 use Hyperf\Utils\Codec\Json;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-/**
- * @Controller(prefix="/wechat/work")
- */
+#[Controller(prefix: "/wechat/work")]
 class WorkController extends AbstractController
 {
-    /**
-     * @Inject()
-     */
+    #[Inject]
     private WorkService $work_service;
 
-    /**
-     * @GetMapping(path="external")
-     */
+    #[GetMapping("external")]
     public function external()
     {
         $userid = $this->request->input('userid', '');
@@ -37,10 +31,8 @@ class WorkController extends AbstractController
         return compact('res');
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="user")
-     */
+    #[Api]
+    #[GetMapping("user")]
     public function user()
     {
         $departments = $this->work_service->getApp()->department->list()['department'] ?? '';
@@ -53,9 +45,7 @@ class WorkController extends AbstractController
         return compact('departments');
     }
 
-    /**
-     * @GetMapping(path="index")
-     */
+    #[GetMapping("index")]
     public function index()
     {
         $code = $this->request->input('code', '');
@@ -76,9 +66,7 @@ class WorkController extends AbstractController
         }
     }
 
-    /**
-     * @RequestMapping(path="msg")
-     */
+    #[RequestMapping("msg")]
     public function openMsg()
     {
         $app = $this->work_service->getApp();

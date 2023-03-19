@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Service\Channel\Product;
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Exception\ErrorException;
 
 /**

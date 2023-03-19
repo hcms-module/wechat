@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
-use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Application\Wechat\Service\Office\Jssdk;
 use App\Application\Wechat\Service\Office\Material;
 use App\Application\Wechat\Service\Office\Message;
@@ -18,7 +17,6 @@ use App\Application\Wechat\Service\Office\Qrcode;
 use App\Application\Wechat\Service\Office\Template;
 use App\Application\Wechat\Service\Office\User;
 use App\Exception\ErrorException;
-use EasyWeChat\Factory;
 use EasyWeChat\OfficialAccount\Application;
 
 /**
@@ -63,9 +61,11 @@ class OfficeService
         if ($wechat_app->aes_key) {
             $config['aes_key'] = $wechat_app->aes_key;
         }
-        $this->app = Factory::officialAccount($config);
-        //用于swoole的request原因，所以在这里需要重写
-        $this->app['request'] = new WechatRequest();
+        try {
+            $this->app = new Application($config);
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
     }
 
     public function __call($name, $arguments)

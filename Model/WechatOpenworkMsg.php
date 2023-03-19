@@ -19,19 +19,19 @@ use Hyperf\DbConnection\Model\Model;
  */
 class WechatOpenworkMsg extends Model
 {
-    protected $primaryKey = 'msg_id';
+    protected string $primaryKey = 'msg_id';
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_openwork_msg';
+    protected ?string $table = 'wechat_openwork_msg';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = [
+    protected array $fillable = [
         'to_user_name',
         'from_user_name',
         'msg_type',
@@ -42,7 +42,7 @@ class WechatOpenworkMsg extends Model
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'msg_id' => 'integer',
         'handle_res' => 'integer',
         'created_at' => 'datetime',

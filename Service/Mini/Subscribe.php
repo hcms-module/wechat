@@ -10,8 +10,10 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Model\WechatMinSubscribeSendRecord;
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Exception\ErrorException;
 use Hyperf\Utils\Codec\Json;
+use Throwable;
 
 class Subscribe extends AbstractMiniComponent
 {
@@ -24,10 +26,16 @@ class Subscribe extends AbstractMiniComponent
      * @param string $page         小程序页面
      * @param array  $data
      * @return bool
-     * @throws \Throwable
+     * @throws Throwable
      */
     function uniform(string $openid, string $office_appid, string $template_id, string $page, array $data): bool
     {
+        foreach ($data as &$item) {
+            //调整格式
+            if (!is_array($item)) {
+                $item = ['value' => $item, 'color' => '#173177'];
+            }
+        }
         $post_data = [
             'touser' => $openid,
             'mp_template_msg' => [
@@ -41,7 +49,7 @@ class Subscribe extends AbstractMiniComponent
                 ]
             ]
         ];
-        $res = $this->service->getApp()->uniform_message->send($post_data);
+        $res = $this->service->postJson('/cgi-bin/message/wxopen/template/uniform_send?', $post_data);
         $errcode = intval($res['errcode'] ?? -1);
         $errmsg = $res['errmsg'] ?? '发送请求错误';
         $model = WechatMinSubscribeSendRecord::firstOrCreate([
@@ -74,17 +82,23 @@ class Subscribe extends AbstractMiniComponent
      * @param string $page
      * @param array  $data
      * @return bool
-     * @throws \Throwable
+     * @throws Throwable
      */
     function send(string $template_id, string $openid, string $page, array $data): bool
     {
+        foreach ($data as &$item) {
+            //调整格式
+            if (!is_array($item)) {
+                $item = ['value' => $item];
+            }
+        }
         $post_data = [
             'template_id' => $template_id,
             'touser' => $openid,
             'page' => $page,
             'data' => $data,
         ];
-        $res = $this->service->getApp()->subscribe_message->send($post_data);
+        $res = $this->service->postJson('/cgi-bin/message/subscribe/send', $post_data);
         $errcode = intval($res['errcode'] ?? -1);
         $errmsg = $res['errmsg'] ?? '发送请求错误';
         $model = WechatMinSubscribeSendRecord::firstOrCreate([

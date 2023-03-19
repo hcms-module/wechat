@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Wechat\Service\Channel;
+namespace App\Application\Wechat\Service\Lib;
 
 use App\Application\Wechat\Service\Mini\Channel;
 

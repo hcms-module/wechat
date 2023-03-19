@@ -10,20 +10,17 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Model\WechatApp;
-use App\Application\Wechat\Service\Lib\WechatRequest;
 use App\Application\Wechat\Service\Mini\channel;
 use App\Application\Wechat\Service\Mini\Content;
 use App\Application\Wechat\Service\Mini\Message;
+use App\Application\Wechat\Service\Mini\Pay;
 use App\Application\Wechat\Service\Mini\Qrcode;
 use App\Application\Wechat\Service\Mini\Shop;
 use App\Application\Wechat\Service\Mini\Subscribe;
 use App\Application\Wechat\Service\Mini\Url;
 use App\Application\Wechat\Service\Mini\User;
 use App\Exception\ErrorException;
-use EasyWeChat\Factory;
-use EasyWeChat\MiniProgram\Application;
-use Hyperf\Utils\Codec\Json;
-use Psr\SimpleCache\InvalidArgumentException;
+use EasyWeChat\MiniApp\Application;
 
 /**
  * @method User user()
@@ -34,13 +31,12 @@ use Psr\SimpleCache\InvalidArgumentException;
  * @method Channel channel()
  * @method Content content()
  * @method Message message()
+ * @method Pay pay()
  */
 class MiniProgramService
 {
     protected Application $app;
     protected string $app_id;
-
-    const API_HOST = "https://api.weixin.qq.com";
 
     /**
      * @param string $app_key
@@ -71,9 +67,11 @@ class MiniProgramService
         if ($wechat_app->aes_key) {
             $config['aes_key'] = $wechat_app->aes_key;
         }
-        $this->app = Factory::miniProgram($config);
-        //用于swoole的request原因，所以在这里需要重写
-        $this->app['request'] = new WechatRequest();
+        try {
+            $this->app = new Application($config);
+        } catch (\Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
     }
 
     public function __call($name, $arguments)
@@ -104,46 +102,27 @@ class MiniProgramService
     }
 
     /**
-     * @return string
-     * @throws \EasyWeChat\Kernel\Exceptions\InvalidArgumentException
-     * @throws \EasyWeChat\Kernel\Exceptions\InvalidConfigException
-     * @throws \EasyWeChat\Kernel\Exceptions\RuntimeException
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \EasyWeChat\Kernel\Exceptions\HttpException
-     */
-    public function getToken(): string
-    {
-        return $this->app->access_token->getToken()['access_token'] ?? '';
-    }
-
-    /**
      * 接口请求封装
      *
      * @param string $uri
      * @param array  $data
-     * @return mixed
+     * @return array
      * @throws ErrorException
      */
-    public function request(string $uri, array $data)
+    public function postJson(string $uri, array $data): array
     {
         try {
-            $token = $this->getToken();
-            $url = self::API_HOST . $uri . "?access_token={$token}";
-            $res = $this->getApp()->http_client->post($url, [
-                'json' => $data
-            ]);
+            $res = $this->getApp()
+                ->getClient()
+                ->postJson($uri, $data);
+            $result = $res->toArray();
+
         } catch (\Throwable $exception) {
             throw new ErrorException("请求错误" . $exception->getMessage());
-        } catch (InvalidArgumentException $exception) {
-            throw new ErrorException("请求参数错误" . $exception->getMessage());
         }
-
-
-        $result = Json::decode($res->getBody()
-            ->getContents());
         $errcode = $result['errcode'] ?? -1;
         if ($errcode !== 0) {
-            throw new ErrorException("请求错误" . $result['errmsg'] ?? '');
+            throw new ErrorException ($result['errmsg'] ?? '请求错误');
         }
 
         return $result;

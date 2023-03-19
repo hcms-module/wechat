@@ -24,19 +24,19 @@ class WechatMinPhone extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_min_phone';
+    protected ?string $table = 'wechat_min_phone';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'phone', 'country_code'];
+    protected array $fillable = ['app_id', 'phone', 'country_code'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = ['id' => 'integer', 'created_at' => 'datetime', 'updated_at' => 'datetime'];
+    protected array $casts = ['id' => 'integer', 'created_at' => 'datetime', 'updated_at' => 'datetime'];
 }

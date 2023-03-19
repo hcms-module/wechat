@@ -9,16 +9,13 @@ use App\Controller\AbstractController;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 
-/**
- * @Controller(prefix="/wechat/test")
- */
+
+#[Controller(prefix: "/wechat/test")]
 class TestController extends AbstractController
 {
 
-    /**
-     * @Api()
-     * @GetMapping(path="index")
-     */
+    #[Api]
+    #[GetMapping("index")]
     public function index()
     {
     }

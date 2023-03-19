@@ -16,9 +16,7 @@ use Hyperf\Di\Annotation\Inject;
 
 class WorkService
 {
-    /**
-     * @Inject()
-     */
+    #[Inject]
     protected WechatSetting $wechat_setting;
     protected Application $app;
 

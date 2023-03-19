@@ -25,21 +25,21 @@ class WechatOfficeQrcode extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_office_qrcode';
+    protected ?string $table = 'wechat_office_qrcode';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'scene', 'expire_time', 'file_path', 'qrcode_url'];
+    protected array $fillable = ['app_id', 'scene', 'expire_time', 'file_path', 'qrcode_url'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'expire_time' => 'integer',
         'created_at' => 'datetime',

@@ -24,25 +24,25 @@ class WechatMinUser extends Model
 {
     use SoftDeletes;
 
-    protected $primaryKey = 'mini_user_id';
+    protected string $primaryKey = 'mini_user_id';
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_min_user';
+    protected ?string $table = 'wechat_min_user';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'openid'];
+    protected array $fillable = ['app_id', 'openid'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'mini_user_id' => 'integer',
         'expire_time' => 'integer',
         'created_at' => 'datetime',

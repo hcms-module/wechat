@@ -10,31 +10,40 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Office;
 
 use App\Application\Wechat\Model\WechatOfficeTemplateSendRecord;
+use App\Application\Wechat\Service\Lib\AbstractOfficeComponent;
 use Hyperf\Utils\Codec\Json;
 
 class Template extends AbstractOfficeComponent
 {
 
     /**
-     *
-     * @param        $open_id
-     * @param        $template_id
+     * @param string $open_id
+     * @param string $template_id
      * @param array  $data
      * @param string $url
      * @param string $mini_program_appid
+     * @param string $client_msg_id
      * @return bool
      */
     public function sendTemplateMsg(
-        $open_id,
-        $template_id,
+        string $open_id,
+        string $template_id,
         array $data,
         string $url = '',
-        string $mini_program_appid = ''
+        string $mini_program_appid = '',
+        string $client_msg_id = ''
     ): bool {
+        foreach ($data as &$item) {
+            //调整格式
+            if (!is_array($item)) {
+                $item = ['value' => $item, 'color' => '#173177'];
+            }
+        }
         $post_data = [
             'touser' => $open_id,
             'template_id' => $template_id,
             'url' => $mini_program_appid === '' ? $url : '',
+            'client_msg_id' => $client_msg_id,
             'miniprogram' => [
                 'appid' => $mini_program_appid,
                 'pagepath' => $url,
@@ -50,7 +59,7 @@ class Template extends AbstractOfficeComponent
             'app_id' => $this->service->getAppId(),
         ]);
         try {
-            $res = $this->service->getApp()->template_message->send($post_data);
+            $res = $this->api_client->postJson('/cgi-bin/message/template/send', $post_data);
             $errcode = intval($res['errcode'] ?? -1);
             if ($errcode === 0) {
                 $model->status = WechatOfficeTemplateSendRecord::SEND_STATUS_SUCCESS;

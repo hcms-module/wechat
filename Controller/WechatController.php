@@ -10,28 +10,23 @@ use App\Application\Admin\Controller\AdminAbstractController;
 use App\Application\Admin\Middleware\AdminMiddleware;
 use App\Application\Wechat\Model\WechatApp;
 use App\Application\Wechat\Service\WechatSetting;
+use App\Controller\AbstractController;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\HttpServer\Annotation\PostMapping;
 
-/**
- * @Middleware(AdminMiddleware::class)
- * @Controller(prefix="/wechat/wechat")
- */
-class WechatController extends AdminAbstractController
+#[Middleware(AdminMiddleware::class)]
+#[Controller(prefix: "/wechat/wechat")]
+class WechatController extends AbstractController
 {
 
-    /**
-     * @Inject()
-     */
+    #[Inject]
     protected WechatSetting $setting;
 
-    /**
-     * @Api()
-     * @GetMapping(path="edit/info")
-     */
+    #[Api]
+    #[GetMapping("edit/info")]
     public function appEditInfo()
     {
         $id = intval($this->request->input('id', 0));
@@ -40,10 +35,8 @@ class WechatController extends AdminAbstractController
         return compact('app');
     }
 
-    /**
-     * @Api()
-     * @PostMapping(path="edit")
-     */
+    #[Api]
+    #[PostMapping("edit")]
     public function appSubmitEdit()
     {
         $validator = $this->validationFactory->make($this->request->all(), [
@@ -77,10 +70,8 @@ class WechatController extends AdminAbstractController
         return $app_model->save() ? $this->returnSuccessJson() : $this->returnErrorJson();
     }
 
-    /**
-     * @Api()
-     * @PostMapping(path="index/delete")
-     */
+    #[Api]
+    #[PostMapping("index/delete")]
     public function appDelete()
     {
         $id = intval($this->request->input('id', 0));
@@ -92,10 +83,8 @@ class WechatController extends AdminAbstractController
         return $app->delete() ? $this->returnSuccessJson() : $this->returnErrorJson();
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="index/lists")
-     */
+    #[Api]
+    #[GetMapping("index/lists")]
     public function appLists()
     {
         $where = [];
@@ -106,10 +95,8 @@ class WechatController extends AdminAbstractController
         return compact('lists');
     }
 
-    /**
-     * @View()
-     * @GetMapping(path="edit")
-     */
+    #[View]
+    #[GetMapping("edit")]
     public function edit()
     {
         $id = intval($this->request->input('id', 0));
@@ -117,16 +104,14 @@ class WechatController extends AdminAbstractController
         return ['title' => $id > 0 ? '编辑应用' : '新增应用'];
     }
 
-    /**
-     * @View()
-     * @GetMapping(path="index")
-     */
-    public function index() { }
+    #[View]
+    #[GetMapping("index")]
+    public function index()
+    {
+    }
 
-    /**
-     * @Api()
-     * @PostMapping(path="work/setting")
-     */
+    #[Api]
+    #[PostMapping("work/setting")]
     public function workSetting()
     {
         $post_data = $this->request->post();
@@ -134,10 +119,8 @@ class WechatController extends AdminAbstractController
         return $this->setting->saveWorkSetting($post_data) ? [] : $this->returnErrorJson();
     }
 
-    /**
-     * @Api()
-     * @GetMapping(path="work/setting")
-     */
+    #[Api]
+    #[GetMapping("work/setting")]
     public function workSettingInfo()
     {
         $setting = $this->setting->getWorkSetting();
@@ -145,10 +128,8 @@ class WechatController extends AdminAbstractController
         return compact('setting');
     }
 
-    /**
-     * @View()
-     * @GetMapping(path="work")
-     */
+    #[View]
+    #[GetMapping("work")]
     public function work()
     {
 

@@ -7,9 +7,10 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Wechat\Service\Mini;
+namespace App\Application\Wechat\Service\Lib;
 
 use App\Application\Wechat\Service\MiniProgramService;
+use App\Exception\ErrorException;
 
 abstract class AbstractMiniComponent
 {
@@ -20,8 +21,11 @@ abstract class AbstractMiniComponent
      */
     public function __construct(MiniProgramService $service) { $this->service = $service; }
 
-    public function request(string $uri, array $data)
+    /**
+     * @throws ErrorException
+     */
+    public function request(string $uri, array $data): array
     {
-        return $this->service->request($uri, $data);
+        return $this->service->postJson($uri, $data);
     }
 }

@@ -9,18 +9,31 @@ use App\Controller\AbstractController;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\RequestMapping;
 
-/**
- * @Controller(prefix="/wechat/notify")
- */
+#[Controller(prefix: "/wechat/notify")]
 class NotifyController extends AbstractController
 {
 
-    /**
-     * @RequestMapping(path="index")
-     */
-    public function index()
+    #[RequestMapping("pay")]
+    public function pay()
     {
-        $wxpay_service = new WxpayService();
-        $wxpay_service->notify();
+        try {
+            $wxpay_service = new WxpayService();
+
+            return $wxpay_service->notify($this->request);
+        } catch (\Throwable $exception) {
+            return $this->response->raw($exception->getMessage());
+        }
+    }
+
+    #[RequestMapping("refund")]
+    public function refund()
+    {
+        try {
+            $wxpay_service = new WxpayService();
+
+            return $wxpay_service->refundNotify($this->request);
+        } catch (\Throwable $exception) {
+            return $this->response->raw($exception->getMessage());
+        }
     }
 }

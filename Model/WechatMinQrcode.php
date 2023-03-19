@@ -26,21 +26,21 @@ class WechatMinQrcode extends Model
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var ?string
      */
-    protected $table = 'wechat_min_qrcode';
+    protected ?string $table = 'wechat_min_qrcode';
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['app_id', 'scene'];
+    protected array $fillable = ['app_id', 'scene'];
     /**
      * The attributes that should be cast to native types.
      *
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'id' => 'integer',
         'width' => 'integer',
         'created_at' => 'datetime',

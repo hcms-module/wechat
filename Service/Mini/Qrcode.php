@@ -10,8 +10,10 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Model\WechatMinQrcode;
+use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Exception\ErrorException;
 use EasyWeChat\Kernel\Http\StreamResponse;
+use Symfony\Component\HttpClient\Response\StreamableInterface;
 use Throwable;
 
 class Qrcode extends AbstractMiniComponent
@@ -38,9 +40,6 @@ class Qrcode extends AbstractMiniComponent
             //如果存在
             return $qrcode_model;
         }
-        $optional = [
-            'width' => $width
-        ];
         $file_name = md5($scene . $page . 'temp') . '.jpg';
         $file_path_dir = BASE_PATH . '/runtime/temp/mini/qrcode/';
         if (!is_dir($file_path_dir)) {
@@ -48,13 +47,14 @@ class Qrcode extends AbstractMiniComponent
         }
         $file_path = $file_path_dir . $file_name;
 
-        $response = $this->service->getApp()->app_code->get($page . '?scene=' . $scene, $optional);
+        $response = $this->service->getApp()
+            ->getClient()
+            ->postJson('/wxa/getwxacode', [
+                'path' => $page . '?scene=' . $scene,
+                'width' => $width
+            ]);
         // 保存小程序码到文件
-        if ($response instanceof StreamResponse) {
-            $response->save($file_path_dir, $file_name);
-        } else {
-            throw new ErrorException('生成小程序码错误');
-        }
+        $response->saveAs($file_path);
         $qrcode_model->page = $page;
         $qrcode_model->width = $width;
         $qrcode_model->env_version = 'temp';
@@ -88,14 +88,15 @@ class Qrcode extends AbstractMiniComponent
             //如果存在
             return $qrcode_model;
         }
-        $optional = [
+        $data = [
+            'scene' => $scene,
             'check_path' => $env_version === 'release', //如果是线上的小程序码，就需要检查
             'env_version' => $env_version,
             'width' => $width
         ];
         if ($page !== '') {
             //如果页面不传或是空，就默认是首页
-            $optional['page'] = $page;
+            $data['page'] = $page;
         }
 
         $file_name = md5($scene . $page . $env_version) . '.jpg';
@@ -105,13 +106,11 @@ class Qrcode extends AbstractMiniComponent
         }
         $file_path = $file_path_dir . $file_name;
 
-        $response = $this->service->getApp()->app_code->getUnlimit($scene, $optional);
+        $response = $this->service->getApp()
+            ->getClient()
+            ->postJson('/wxa/getwxacodeunlimit', $data);
         // 保存小程序码到文件
-        if ($response instanceof StreamResponse) {
-            $response->save($file_path_dir, $file_name);
-        } else {
-            throw new ErrorException('生成小程序码错误');
-        }
+        $response->saveAs($file_path);
         $qrcode_model->page = $page;
         $qrcode_model->width = $width;
         $qrcode_model->env_version = $env_version;
