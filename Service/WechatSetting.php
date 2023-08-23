@@ -14,6 +14,16 @@ use App\Service\AbstractSettingService;
 class WechatSetting extends AbstractSettingService
 {
 
+    public function getWxpayPartnerSetting(string $key = '', $default = '')
+    {
+        return $this->getSettings('wxpay-partner', $key, $default);
+    }
+
+    public function saveWxpayPartnerSetting(array $setting_data): bool
+    {
+        return $this->saveSetting($setting_data, 'wxpay-partner');
+    }
+
     public function getWxpaySetting(string $key = '', $default = '')
     {
         return $this->getSettings('wxpay', $key, $default);

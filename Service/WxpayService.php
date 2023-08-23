@@ -11,27 +11,30 @@ namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Event\WxpayPayNotifyEvent;
 use App\Application\Wechat\Event\WxpayRefundNotifyEvent;
+use App\Application\Wechat\Model\WechatPayMerchant;
 use App\Application\Wechat\Model\WechatPayOrder;
 use App\Application\Wechat\Model\WechatPayOrderRefund;
+use App\Application\Wechat\Service\Lib\PayUtils;
 use App\Exception\ErrorException;
-use EasyWeChat\Pay\Application;
-use EasyWeChat\Pay\Client;
-use EasyWeChat\Pay\Message;
+use Hyperf\Codec\Json;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Logger\LoggerFactory;
-use Hyperf\Utils\Codec\Json;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpClient\Exception\ClientException;
 use Throwable;
+use EasyWeChat\Pay\Message;
+use WeChatPay\Builder;
+use WeChatPay\BuilderChainable;
+use WeChatPay\Crypto\AesGcm;
+use WeChatPay\Crypto\Rsa;
+use WeChatPay\Util\PemUtil;
 
 class WxpayService
 {
     #[Inject]
     protected WechatSetting $setting;
-    protected Application $app;
 
     #[Inject]
     protected LoggerFactory $loggerFactory;
@@ -39,48 +42,42 @@ class WxpayService
 
     #[Inject]
     protected EventDispatcherInterface $eventDispatcher;
+    protected BuilderChainable $app;
+    protected WechatPayMerchant $merchant;
 
-    protected string $mchid = '';
-
-    public function __construct()
+    public function __construct($id)
     {
-        $setting = $this->setting->getWxpaySetting();
-        $config = [
-            // 必要配置
-            'mch_id' => $setting['pay_mch_id'] ?? '',
-            'secret_key' => $setting['pay_secret_key'] ?? '',   // API v3 密钥 (注意: 是v3密钥 是v3密钥 是v3密钥)
-            'v2_secret_key' => $setting['pay_v2_secret_key'] ?? '',
-            // 如需使用敏感接口（如退款、发送红包等）需要配置 API 证书路径(登录商户平台下载 API 证书)
-            'certificate' => $this->getTempFilePath($setting['pay_cert_path'] ?? '', 'cert.pem'), // XXX: 绝对路径！！！！
-            'private_key' => $this->getTempFilePath($setting['pay_key_path'] ?? '', 'key.pem'),      // XXX: 绝对路径！！！！
-        ];
+        $merchant = WechatPayMerchant::find($id);
+        if (!$merchant instanceof WechatPayMerchant) {
+            throw new ErrorException('找不到商户');
+        }
+        $this->merchant = $merchant;
+        // 商户号
+        $merchantId = $merchant->pay_mch_id;
+
+        // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
+        $merchantPrivateKeyInstance = Rsa::from($merchant->pay_cert_key);
+
+        // 「商户API证书」的「证书序列号」
+        $merchantCertificateSerial = $merchant->serial;
+
+        // 从本地文件中加载「微信支付平台证书」，用来验证微信支付应答的签名
+        $platformPublicKeyInstance = Rsa::from($merchant->platform_cert_pem, Rsa::KEY_TYPE_PUBLIC);
+
+        // 从「微信支付平台证书」中获取「证书序列号」
+        $platformCertificateSerial = PemUtil::parseCertificateSerialNo($merchant->platform_cert_pem);
+
         $this->logger = $this->loggerFactory->get('notify', 'request');
         try {
-            $this->app = new Application($config);
-        } catch (Throwable $exception) {
-            throw new ErrorException($exception->getMessage());
-        }
-    }
-
-    protected function requestJson(string $uri, array $data = [], string $method = "POST"): array
-    {
-        try {
-            $api = $this->app->getClient();
-            if ($api instanceof Client) {
-                if ($method == "POST") {
-                    $result = $api->postJson($uri, [
-                        'json' => $data,
-                    ]);
-                } else {
-                    $result = $api->get($uri);
-                }
-
-                return $result->toArray();
-            } else {
-                throw new ErrorException('获取接口对象错误');
-            }
-        } catch (ClientException $exception) {
-            throw new ErrorException("连接错误，请检查支付配置是否正确。" . $exception->getMessage());
+            $config = [
+                'mchid' => $merchantId,
+                'serial' => $merchantCertificateSerial,
+                'privateKey' => $merchantPrivateKeyInstance,
+                'certs' => [
+                    $platformCertificateSerial => $platformPublicKeyInstance,
+                ],
+            ];
+            $this->app = Builder::factory($config);
         } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
@@ -93,20 +90,13 @@ class WxpayService
      * @return ResponseInterface
      * @throws ErrorException
      */
-    public function refundNotify(ServerRequestInterface $request): ResponseInterface
+    public function refundNotify(ServerRequestInterface $request): bool
     {
         try {
-            $server = $this->app->setRequest($request)
-                ->getServer();
+            $message = $this->getNotifyInfoByRequest($request);
+            $this->eventDispatcher->dispatch(new WxpayRefundNotifyEvent($message->toArray()));
 
-            $server->handleRefunded(function (Message $message) {
-                $message = $message->toArray();
-                $this->logger->info('get refund notify', $message->toArray());
-                //微信支付回调事件，最好是通过  getRefundByOutRefundNo 方法获取最终的退款信息
-                $this->eventDispatcher->dispatch(new WxpayRefundNotifyEvent($message));
-            });
-
-            return $server->serve();
+            return true;
         } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
@@ -119,8 +109,11 @@ class WxpayService
      */
     public function getRefundByOutRefundNo(string $out_refund_no): WechatPayOrderRefund
     {
-        $uri = "/v3/refund/domestic/refunds/{$out_refund_no}";
-        $res = $this->requestJson($uri, method: "GET");
+        $resp = $this->app->v3->refund->domestic->refunds->_out_refund_no_->get([
+            'out_refund_no' => $out_refund_no,
+        ]);
+        $res = Json::decode($resp->getBody()
+            ->getContents());
         $order_refund = WechatPayOrderRefund::firstOrCreate(compact('out_refund_no'));
         $order_refund->transaction_id = $res['transaction_id'] ?? '';
         $order_refund->refund_id = $res['refund_id'] ?? '';
@@ -151,7 +144,6 @@ class WxpayService
         $order = $this->getOrderByOutTradeNo($out_trade_no);
         $order_meta = $order->meta_info;
         $notify_url = url('wechat/notify/refund', [], true);
-        $uri = "/v3/refund/domestic/refunds";
         if ($out_refund_no === '') {
             $out_refund_no = 'refund_' . $out_trade_no . '_' . rand(1000, 9999);
         }
@@ -168,7 +160,12 @@ class WxpayService
         if ($reason !== '') {
             $data['reason'] = $reason;
         }
-        $res = $this->requestJson($uri, $data);
+
+        $resp = $this->app->v3->refund->domestic->refunds->post(["json" => $data]);
+
+        $res = Json::decode($resp->getBody()
+            ->getContents());
+
         $order_refund = WechatPayOrderRefund::firstOrCreate(compact('out_trade_no', 'out_refund_no'));
         $order_refund->transaction_id = $res['transaction_id'] ?? '';
         $order_refund->refund_id = $res['refund_id'] ?? '';
@@ -189,20 +186,46 @@ class WxpayService
      * @return ResponseInterface
      * @throws ErrorException
      */
-    public function notify(ServerRequestInterface $request): ResponseInterface
+    public function notify(ServerRequestInterface $request): bool
     {
         try {
-            $server = $this->app->setRequest($request)
-                ->getServer();
+            $message = $this->getNotifyInfoByRequest($request);
+            $this->logger->info('get notify', $message->toArray());
+            //微信支付回调事件，建议使用 getOrderByOutTradeNo 查看订单是否支付成功
+            $this->eventDispatcher->dispatch(new WxpayPayNotifyEvent($message->toArray()));
 
-            $server->handlePaid(function (Message $message) {
-                $message = $message->toArray();
-                $this->logger->info('get notify', $message->toArray());
-                //微信支付回调事件，建议使用 getOrderByOutTradeNo 查看订单是否支付成功
-                $this->eventDispatcher->dispatch(new WxpayPayNotifyEvent($message));
-            });
+            return true;
+        } catch (Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
+    }
 
-            return $server->serve();
+    private function getNotifyInfoByRequest(ServerRequestInterface $request): Message
+    {
+        try {
+            $originContent = (string)$request->getBody();
+            $attributes = Json::decode($originContent);
+
+            if (!is_array($attributes)) {
+                throw new ErrorException('Invalid request body.');
+            }
+
+            if (empty($attributes['resource']['ciphertext'])) {
+                throw new ErrorException('Invalid request.');
+            }
+
+            $attributes = json_decode(AesGcm::decrypt($attributes['resource']['ciphertext'],
+                $this->merchant->pay_secret_key, $attributes['resource']['nonce'],
+                $attributes['resource']['associated_data']), true);
+
+            if (!is_array($attributes)) {
+                throw new ErrorException('Failed to decrypt request message.');
+            }
+
+            $message = new Message($attributes, $originContent);
+            $this->logger->info('get notify', $message->toArray());
+
+            return $message;
         } catch (Throwable $exception) {
             throw new ErrorException($exception->getMessage());
         }
@@ -217,8 +240,12 @@ class WxpayService
      */
     function getOrderByOutTradeNo(string $out_trade_no): WechatPayOrder
     {
-        $uri = "/v3/pay/transactions/out-trade-no/{$out_trade_no}?mchid=" . $this->getMchid();
-        $res = $this->requestJson($uri, method: "GET");
+        $resp = $this->app->v3->pay->transactions->outTradeNo->_out_trade_no_->get([
+            'query' => ['mchid' => $this->merchant->pay_mch_id],
+            'out_trade_no' => $out_trade_no,
+        ]);
+        $res = Json::decode($resp->getBody()
+            ->getContents());
         $mchid = $res['mchid'] ?? '';
         $out_trade_no = $res['out_trade_no'] ?? '';
         $order = WechatPayOrder::firstOrCreate([
@@ -258,7 +285,7 @@ class WxpayService
     ): array {
         try {
             $prepay_id = $this->unifyJsApi($app_id, $open_id, $out_trade_no, $total_fee, $description);
-            $utils = $this->app->getUtils();
+            $utils = new PayUtils($this->merchant);
 
             return $utils->buildMiniAppConfig($prepay_id, $app_id);
         } catch (Throwable $exception) {
@@ -289,7 +316,7 @@ class WxpayService
             $notify_url = url('wechat/notify/index', [], true);
             $data = [
                 'appid' => $appid,
-                'mchid' => $this->getMchid(),
+                'mchid' => $this->merchant->pay_mch_id,
                 'description' => $description,
                 'out_trade_no' => $out_trade_no,
                 'notify_url' => $notify_url,
@@ -300,10 +327,12 @@ class WxpayService
                     'openid' => $openid,
                 ],
             ];
-            $result = $this->requestJson('/v3/pay/transactions/jsapi', $data);
+            $resp = $this->app->v3->pay->transactions->jsapi->post(['json' => $data]);
+            $result = Json::decode($resp->getBody()
+                ->getContents());
             $prepay_id = $result['prepay_id'] ?? "";
             if ($prepay_id == '') {
-                throw new ErrorException('创建支付订单失败2：' . $result['err_code_des'] ?? "");
+                throw new ErrorException('创建支付订单失败2：' . ($result['err_code_des'] ?? ""));
             }
             //创建成功，存入数据。
             $pay_order = WechatPayOrder::firstOrCreate([
@@ -322,50 +351,5 @@ class WxpayService
         } catch (Throwable $exception) {
             throw new ErrorException('创建支付订单失败3：' . $exception->getMessage());
         }
-    }
-
-    /**
-     * 获取证书路径
-     *
-     * @param string $content
-     * @param string $file_name
-     * @return string
-     */
-    private function getTempFilePath(string $content, string $file_name): string
-    {
-        $file_path_dir = BASE_PATH . '/runtime/temp/cert/';
-        if (!is_dir($file_path_dir)) {
-            mkdir($file_path_dir, 0700, true);
-        }
-        $file_path = $file_path_dir . $file_name;
-        if (!file_exists($file_path)) {
-            file_put_contents($file_path, $content);
-        }
-
-        return $file_path;
-    }
-
-    /**
-     * @return string
-     */
-    public function getMchid(): string
-    {
-        if ($this->mchid == '') {
-            $this->mchid = $this->app->getConfig()
-                    ->get('mch_id') . '';
-        }
-
-        return $this->mchid;
-    }
-
-    /**
-     * @param string $mchid
-     * @return $this
-     */
-    public function setMchid(string $mchid): self
-    {
-        $this->mchid = $mchid;
-
-        return $this;
     }
 }

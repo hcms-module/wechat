@@ -1,0 +1,115 @@
+<div class="page-container" v-cloak>
+    <el-card>
+        <template #header>
+            <div class="breadcrumb">
+                <el-breadcrumb separator="/">
+                    <el-breadcrumb-item>微信支付列表</el-breadcrumb-item>
+                </el-breadcrumb>
+            </div>
+        </template>
+        <div>
+            <el-form :inline="true">
+                <el-form-item>
+                    <el-link href="{:url('wechat/wxpay/edit')}">
+                        <el-button type="primary">新增</el-button>
+                    </el-link>
+                </el-form-item>
+            </el-form>
+        </div>
+        <div>
+            <el-table
+                    :data="data_list"
+                    style="width: 100%">
+                <el-table-column
+                        fixed
+                        prop="merchant_id"
+                        label="ID"
+                        width="80">
+                </el-table-column>
+                <el-table-column
+                        prop="pay_mch_id"
+                        label="商户号"
+                        min-width="100">
+                </el-table-column>
+                <el-table-column
+                        align="center"
+                        prop="merchant_type"
+                        label="类型"
+                        min-width="120">
+                    <template #default="{row}">
+                        <div>
+                            <el-tag v-if="row.merchant_type==0">普通商户</el-tag>
+                            <el-tag v-if="row.merchant_type==1">特约商户</el-tag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        prop="created_at"
+                        width="160"
+                        label="创建时间">
+                </el-table-column>
+                <el-table-column
+                        fixed="right"
+                        align="center"
+                        min-width="180"
+                        label="操作">
+                    <template #default="{row}">
+                        <el-link :href="`{:url('wechat/wxpay/edit',['merchant_id'=>''])}`+row.merchant_id">
+                            <el-button type="primary">编辑</el-button>
+                        </el-link>
+                        <el-link @click="deleteEvent(row)">
+                            <el-button type="danger">删除</el-button>
+                        </el-link>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="pagination-container">
+                <el-pagination
+                        background
+                        layout="prev, pager, next, total"
+                        :total="total_num"
+                        :current-page="current_page"
+                        :page-size="per_page"
+                        @current-change="currentChangeEvent"
+                >
+                </el-pagination>
+            </div>
+        </div>
+    </el-card>
+</div>
+
+<script>
+    const App = {
+        data() {
+            return {
+                is_init_list: true,
+                where: {},
+            }
+        },
+        methods: {
+            GetList() {
+                this.httpGet('{:url("wechat/wxpay/lists")}', {
+                    page: this.current_page,
+                    ...this.where
+                }).then(res => {
+                    let {lists = {}} = res.data
+                    this.handRes(lists)
+                })
+            },
+            deleteEvent({merchant_id}) {
+                this.$confirm("是否确认删除该记录？", '提示').then(() => {
+                    this.httpDelete("{:url('wechat/wxpay/delete')}/" + merchant_id).then(res => {
+                        if (res.status) {
+                            this.$message.success(res.msg)
+                        }
+                        this.GetList()
+                    })
+                }).catch(err => {
+
+                })
+            },
+            searchEvent() {
+            }
+        }
+    }
+</script>

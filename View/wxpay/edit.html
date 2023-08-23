@@ -1,0 +1,109 @@
+<div class="page-container" v-cloak>
+    <el-card>
+        <template #header>
+            <div class="breadcrumb">
+                <el-breadcrumb separator="/">
+                    <el-breadcrumb-item><a href="{:url('wechat/wxpay/index')}">微信支付列表</a></el-breadcrumb-item>
+                    <el-breadcrumb-item>{$title}</el-breadcrumb-item>
+                </el-breadcrumb>
+            </div>
+        </template>
+        <div>
+            <el-form :model="form" label-width="120px">
+                <el-form-item prop="merchant_type"
+                              :rules="[{ required: true, message: '请选择商户类型', trigger: 'blur' }]"
+                              label="商户类型">
+                    <div>
+                        <el-radio-group v-model="form.merchant_type">
+                            <el-radio :label="0">普通商户</el-radio>
+                            <el-radio :label="1">特约商户</el-radio>
+                        </el-radio-group>
+                    </div>
+                </el-form-item>
+                <el-form-item prop="pay_mch_id" :rules="[{ required: true, message: '请输入商户号', trigger: 'blur' }]"
+                              label="商户号">
+                    <el-input v-model="form.pay_mch_id" placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item prop="pay_secret_key"
+                              :rules="[{ required: true, message: '请输入V3秘钥', trigger: 'blur' }]"
+                              label="秘钥">
+                    <el-input v-model="form.pay_secret_key" placeholder="请输入V3秘钥"></el-input>
+                </el-form-item>
+                <el-form-item prop="pay_v2_secret_key"
+                              label="v2秘钥">
+                    <el-input v-model="form.pay_v2_secret_key" placeholder="请输入V2秘钥，可选"></el-input>
+                </el-form-item>
+                <el-form-item prop="serial"
+                              label="证书序列号">
+                    <el-input v-model="form.serial" placeholder="请输入证书序列号"></el-input>
+                </el-form-item>
+                <el-form-item prop="pay_cert_key" label="商户私钥证书">
+                    <el-input style="width: 500px" :rows="4" v-model="form.pay_cert_key" type="textarea"
+                              placeholder=""></el-input>
+                </el-form-item>
+                <el-form-item prop="platform_cert_pem" label='平台公钥证书'>
+                    <div>
+                        <el-input style="width: 500px" :rows="4" v-model="form.platform_cert_pem" type="textarea"
+                                  placeholder="请输入平台公钥证书"></el-input>
+                        <div class="form-small">
+                            <small>注意，这是平台的公钥证书，具体生成看： <a target="_blank"
+                                                                          href="https://github.com/wechatpay-apiv3/wechatpay-php/blob/main/bin/README.md">
+                                https://github.com/wechatpay-apiv3/wechatpay-php/blob/main/bin/README.md</a></small>
+                        </div>
+                    </div>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="submitEvent" type="primary">
+                        提交
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </el-card>
+</div>
+<script>
+    const App = {
+        data() {
+            return {
+                form: {
+                    merchant_type: 0
+                }
+            }
+        },
+        mounted() {
+            this.getInfo()
+        },
+        methods: {
+            /**
+             * 获取编辑所需信息
+             */
+            getInfo() {
+                this.httpGet("{:url('wechat/wxpay/edit')}/" + this.getUrlQuery("merchant_id", 0)).then(res => {
+                    if (res.code) {
+                        let {merchant = {}} = res.data
+                        this.form = {
+                            ...this.form,
+                            ...merchant
+                        }
+                    }
+                })
+            },
+            /**
+             * 提交信息
+             */
+            submitEvent() {
+                this.httpPost("{:url('wechat/wxpay/edit')}", {
+                    ...this.form,
+                }).then(res => {
+                    if (res.status) {
+                        this.$message.success(res.msg)
+                        location.href = "{:url('wechat/wxpay/index')}"
+                    }
+                })
+            },
+        }
+    }
+</script>
+
+<style>
+</style>

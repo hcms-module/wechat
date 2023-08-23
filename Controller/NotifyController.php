@@ -19,7 +19,7 @@ class NotifyController extends AbstractController
         try {
             $wxpay_service = new WxpayService();
 
-            return $wxpay_service->notify($this->request);
+            return $wxpay_service->notify($this->request) ? "success" : "fail";
         } catch (\Throwable $exception) {
             return $this->response->raw($exception->getMessage());
         }
@@ -31,7 +31,7 @@ class NotifyController extends AbstractController
         try {
             $wxpay_service = new WxpayService();
 
-            return $wxpay_service->refundNotify($this->request);
+            return $wxpay_service->refundNotify($this->request) ? "success" : "fail";
         } catch (\Throwable $exception) {
             return $this->response->raw($exception->getMessage());
         }

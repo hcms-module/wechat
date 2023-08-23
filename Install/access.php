@@ -31,7 +31,13 @@ return [
             ],
             [
                 'access_name' => '微信支付',
-                'uri' => 'wechat/wxpay/setting',
+                'uri' => 'wechat/wxpay/index',
+                'sort' => 100,
+                'is_menu' => 1
+            ],
+            [
+                'access_name' => '支付服务商',
+                'uri' => 'wechat/wxpay/partner/setting',
                 'sort' => 100,
                 'is_menu' => 1
             ],
