@@ -45,9 +45,10 @@ class User extends AbstractOfficeComponent
      * @return WechatOfficeUser
      * @throws \Throwable
      */
-    public function oauth(string $code = ''): WechatOfficeUser
+    public function oauth(string $code = '', array $scopes = ['snsapi_base']): WechatOfficeUser
     {
-        $user = $this->oauth->userFromCode($code);
+        $user = $this->oauth->scopes($scopes)
+            ->userFromCode($code);
         $original_info = $user->getRaw();
         $office_user = WechatOfficeUser::firstOrNew([
             'app_id' => $this->service->getAppId(),

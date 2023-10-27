@@ -143,7 +143,7 @@ class WxpayService
     ): WechatPayOrderRefund {
         $order = $this->getOrderByOutTradeNo($out_trade_no);
         $order_meta = $order->meta_info;
-        $notify_url = url('wechat/notify/refund', [], true);
+        $notify_url = url('wechat/notify/refund/' . $this->merchant->merchant_id, [], true);
         if ($out_refund_no === '') {
             $out_refund_no = 'refund_' . $out_trade_no . '_' . rand(1000, 9999);
         }
@@ -293,6 +293,23 @@ class WxpayService
         }
     }
 
+    public function getBridgeConfig(
+        string $app_id,
+        string $open_id,
+        string $out_trade_no,
+        int $total_fee,
+        string $description = ''
+    ): array {
+        try {
+            $prepay_id = $this->unifyJsApi($app_id, $open_id, $out_trade_no, $total_fee, $description);
+            $utils = new PayUtils($this->merchant);
+
+            return $utils->buildBridgeConfig($prepay_id, $app_id);
+        } catch (Throwable $exception) {
+            throw new ErrorException($exception->getMessage());
+        }
+    }
+
 
     /**
      * 统一下单接口
@@ -313,7 +330,7 @@ class WxpayService
         string $description = ''
     ): string {
         try {
-            $notify_url = url('wechat/notify/index', [], true);
+            $notify_url = url('wechat/notify/pay/' . $this->merchant->merchant_id, [], true);
             $data = [
                 'appid' => $appid,
                 'mchid' => $this->merchant->pay_mch_id,

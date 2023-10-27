@@ -18,5 +18,5 @@ return [
         'composer' => ['w7corp/easywechat' => '^6.10', 'wechatpay/wechatpay' => '^1.4'],
         'module' => []
     ],
-    'version' => '3.1.0'
+    'version' => '3.1.1'
 ];

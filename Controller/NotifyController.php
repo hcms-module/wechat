@@ -13,11 +13,11 @@ use Hyperf\HttpServer\Annotation\RequestMapping;
 class NotifyController extends AbstractController
 {
 
-    #[RequestMapping("pay")]
-    public function pay()
+    #[RequestMapping("pay/{id}")]
+    public function pay(int $id)
     {
         try {
-            $wxpay_service = new WxpayService();
+            $wxpay_service = new WxpayService($id);
 
             return $wxpay_service->notify($this->request) ? "success" : "fail";
         } catch (\Throwable $exception) {
@@ -25,11 +25,11 @@ class NotifyController extends AbstractController
         }
     }
 
-    #[RequestMapping("refund")]
-    public function refund()
+    #[RequestMapping("refund/{id}")]
+    public function refund(int $id)
     {
         try {
-            $wxpay_service = new WxpayService();
+            $wxpay_service = new WxpayService($id);
 
             return $wxpay_service->refundNotify($this->request) ? "success" : "fail";
         } catch (\Throwable $exception) {
