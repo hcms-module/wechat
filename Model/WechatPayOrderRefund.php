@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Model;
 
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 
 /**
  * @property int            $id

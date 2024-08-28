@@ -12,7 +12,7 @@ namespace App\Application\Wechat\Service\Mini;
 use App\Application\Wechat\Model\WechatMinSubscribeSendRecord;
 use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
 use App\Exception\ErrorException;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 use Throwable;
 
 class Subscribe extends AbstractMiniComponent

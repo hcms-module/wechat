@@ -13,7 +13,7 @@ use App\Controller\AbstractController;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\RequestMapping;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 
 
 #[Controller(prefix: "/wechat/work/open")]

@@ -11,7 +11,7 @@ namespace App\Application\Wechat\Service\Office;
 
 use App\Application\Wechat\Model\WechatOfficeTemplateSendRecord;
 use App\Application\Wechat\Service\Lib\AbstractOfficeComponent;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 
 class Template extends AbstractOfficeComponent
 {

@@ -12,7 +12,7 @@ namespace App\Application\Wechat\Service\OpenWork;
 use App\Application\Wechat\Model\WechatOpenworkEvent;
 use App\Application\Wechat\Service\OpenWork\EventHandle\CreateAuth;
 use App\Application\Wechat\Service\OpenWork\EventHandle\EventHandleInterface;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 
 class EventHandleService
 {

@@ -11,7 +11,7 @@ namespace App\Application\Wechat\Service\OpenWork\EventHandle;
 
 use App\Application\Wechat\Model\WechatOpenworkCorp;
 use App\Application\Wechat\Service\OpenWorkService;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 use Throwable;
 
 class CreateAuth implements EventHandleInterface

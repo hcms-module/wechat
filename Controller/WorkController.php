@@ -12,7 +12,7 @@ use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\RequestMapping;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 #[Controller(prefix: "/wechat/work")]

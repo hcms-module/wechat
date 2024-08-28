@@ -12,7 +12,7 @@ namespace App\Application\Wechat\Service\OpenWork;
 use App\Application\Wechat\Model\WechatOpenworkMsg;
 use App\Application\Wechat\Service\OpenWork\MsgHandle\EventMsgHandleInterface;
 use App\Application\Wechat\Service\OpenWork\MsgHandle\Unlicensed;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 
 class MsgHandleService
 {

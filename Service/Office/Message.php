@@ -16,7 +16,7 @@ use App\Application\Wechat\Model\WechatOfficeMessage;
 use App\Application\Wechat\Service\Lib\AbstractOfficeComponent;
 use App\Exception\ErrorException;
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
