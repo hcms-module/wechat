@@ -10,7 +10,6 @@ use App\Application\Admin\Middleware\AdminMiddleware;
 use App\Application\Wechat\Controller\RequestParam\WxpayMerchantRequestParam;
 use App\Application\Wechat\Model\WechatPayMerchant;
 use App\Application\Wechat\Service\WechatSetting;
-use App\Application\Wechat\Service\WxpayService;
 use App\Controller\AbstractController;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Annotation\Controller;

@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service\Mini;
 
 use App\Application\Wechat\Service\Lib\AbstractMiniComponent;
-use App\Application\Wechat\Service\WxpayService;
+use App\Application\Wechat\Service\WechatPay\WxpayService;
 
 class Pay extends AbstractMiniComponent
 {

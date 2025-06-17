@@ -7,15 +7,15 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Wechat\Service;
+namespace App\Application\Wechat\Service\WechatPay;
 
 use App\Application\Wechat\Event\WxpayPayNotifyEvent;
 use App\Application\Wechat\Event\WxpayRefundNotifyEvent;
-use App\Application\Wechat\Model\WechatPayMerchant;
 use App\Application\Wechat\Model\WechatPayOrder;
 use App\Application\Wechat\Model\WechatPayOrderRefund;
 use App\Application\Wechat\Service\Lib\PayUtils;
 use App\Exception\ErrorException;
+use EasyWeChat\Pay\Message;
 use Hyperf\Codec\Json;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Logger\LoggerFactory;
@@ -24,64 +24,16 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use EasyWeChat\Pay\Message;
-use WeChatPay\Builder;
-use WeChatPay\BuilderChainable;
 use WeChatPay\Crypto\AesGcm;
-use WeChatPay\Crypto\Rsa;
-use WeChatPay\Util\PemUtil;
 
-class WxpayService
+class WxpayService extends AbstractWechatPayService
 {
-    #[Inject]
-    protected WechatSetting $setting;
-
     #[Inject]
     protected LoggerFactory $loggerFactory;
     protected LoggerInterface $logger;
 
     #[Inject]
     protected EventDispatcherInterface $eventDispatcher;
-    protected BuilderChainable $app;
-    protected WechatPayMerchant $merchant;
-
-    public function __construct($id)
-    {
-        $merchant = WechatPayMerchant::find($id);
-        if (!$merchant instanceof WechatPayMerchant) {
-            throw new ErrorException('找不到商户');
-        }
-        $this->merchant = $merchant;
-        // 商户号
-        $merchantId = $merchant->pay_mch_id;
-
-        // 从本地文件中加载「商户API私钥」，「商户API私钥」会用来生成请求的签名
-        $merchantPrivateKeyInstance = Rsa::from($merchant->pay_cert_key);
-
-        // 「商户API证书」的「证书序列号」
-        $merchantCertificateSerial = $merchant->serial;
-
-        // 从本地文件中加载「微信支付平台证书」，用来验证微信支付应答的签名
-        $platformPublicKeyInstance = Rsa::from($merchant->platform_cert_pem, Rsa::KEY_TYPE_PUBLIC);
-
-        // 从「微信支付平台证书」中获取「证书序列号」
-        $platformCertificateSerial = PemUtil::parseCertificateSerialNo($merchant->platform_cert_pem);
-
-        $this->logger = $this->loggerFactory->get('notify', 'request');
-        try {
-            $config = [
-                'mchid' => $merchantId,
-                'serial' => $merchantCertificateSerial,
-                'privateKey' => $merchantPrivateKeyInstance,
-                'certs' => [
-                    $platformCertificateSerial => $platformPublicKeyInstance,
-                ],
-            ];
-            $this->app = Builder::factory($config);
-        } catch (Throwable $exception) {
-            throw new ErrorException($exception->getMessage());
-        }
-    }
 
     /**
      * 退款回调

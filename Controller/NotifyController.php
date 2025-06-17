@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Controller;
 
-use App\Application\Wechat\Service\WxpayService;
+use App\Application\Wechat\Service\WechatPay\WxpayService;
 use App\Controller\AbstractController;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\RequestMapping;
