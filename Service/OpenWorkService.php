@@ -9,23 +9,18 @@ declare(strict_types=1);
 
 namespace App\Application\Wechat\Service;
 
-use App\Application\Wechat\Model\WechatOpenworkCorp;
 use EasyWeChat\OpenWork\Application;
-use Hyperf\Di\Annotation\Inject;
 
 /**
  * 企业微信服务商
  */
 class OpenWorkService
 {
-
-    #[Inject]
-    protected WechatSetting $wechat_setting;
     protected Application $app;
 
     public function __construct()
     {
-        $work_setting = $this->wechat_setting->getWorkSetting();
+        $work_setting = (new WechatSetting())->getWorkSetting();
         $config = [
             'corp_id' => $work_setting['wechat_openwork_corpid'] ?? '',
             'provider_secret' => $work_setting['wechat_openwork_secret'] ?? '',

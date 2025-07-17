@@ -7,6 +7,7 @@ namespace App\Application\Wechat\Controller;
 use App\Annotation\Api;
 use App\Annotation\View;
 use App\Application\Admin\Middleware\AdminMiddleware;
+use Hyperf\Session\Middleware\SessionMiddleware;
 use App\Application\Wechat\Service\WechatSetting;
 use App\Application\Wechat\Service\WxpayPartnerService;
 use App\Controller\AbstractController;
@@ -16,6 +17,7 @@ use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Middleware;
 use Hyperf\HttpServer\Annotation\PostMapping;
 
+#[Middleware(SessionMiddleware::class)]
 #[Middleware(AdminMiddleware::class)]
 #[Controller(prefix: "/wechat/wxpay/partner")]
 class WxpayPartnerController extends AbstractController
