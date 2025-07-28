@@ -33,14 +33,14 @@ abstract class AbstractWorkObject
 
     /**
      * @param string $uri
-     * @param array  $query
+     * @param array  $data
      * @return array
      * @throws ErrorException
      */
-    public function postJson(string $uri, array $query = []): array
+    public function postJson(string $uri, array $data = [], array $options = []): array
     {
         try {
-            return $this->client->postJson($uri, $query)
+            return $this->client->postJson($uri, $data, $options)
                 ->toArray();
         } catch (Throwable $e) {
             throw new ErrorException($e->getMessage());

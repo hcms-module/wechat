@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace App\Application\Wechat\Service;
 
 use App\Application\Wechat\Service\Work\Department;
-use App\Application\Wechat\Service\Work\OA;
+use App\Application\Wechat\Service\Work\Oa;
 use App\Application\Wechat\Service\Work\User;
 use App\Exception\ErrorException;
 use EasyWeChat\Kernel\Contracts\Server;
@@ -23,7 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @property Department $department;
  * @property User       $user      ;
- * @property OA         $oa        ;
+ * @property Oa         $oa        ;
  */
 class WorkService
 {
@@ -31,6 +31,7 @@ class WorkService
     protected Application $app;
 
     protected string $corp_id;
+    protected int $agent_id = 0;
 
     /**
      * @throws InvalidArgumentException
@@ -50,6 +51,7 @@ class WorkService
         $app = new Application($config);
         $this->app = $app;
         $this->corp_id = $corp_id;
+        $this->agent_id = intval($work_setting['wechat_work_agent_id'] ?? '');
     }
 
     public function getClient(): AccessTokenAwareClient
@@ -86,5 +88,21 @@ class WorkService
         }
 
         return new  $class_name($this->getClient(), $this->corp_id);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCorpId(): string
+    {
+        return $this->corp_id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAgentId(): int
+    {
+        return $this->agent_id;
     }
 }

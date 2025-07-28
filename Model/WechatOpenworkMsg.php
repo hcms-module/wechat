@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace App\Application\Wechat\Model;
 
+use Hyperf\Codec\Json;
 use Hyperf\DbConnection\Model\Model;
 
 /**
@@ -11,7 +12,7 @@ use Hyperf\DbConnection\Model\Model;
  * @property string         $to_user_name
  * @property string         $from_user_name
  * @property string         $msg_type
- * @property string         $msg_content
+ * @property array          $msg_content
  * @property int            $handle_res
  * @property string         $handle_msg
  * @property \Carbon\Carbon $created_at
@@ -48,4 +49,24 @@ class WechatOpenworkMsg extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+
+    public function getMsgContentAttribute($value): array
+    {
+        try {
+            if ($value) {
+                return Json::decode($value);
+            } else {
+                return [];
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    public function setMsgContentAttribute($value): void
+    {
+        $this->attributes['msg_content'] = is_array($value) ? Json::encode($value) : $value;
+    }
+
 }

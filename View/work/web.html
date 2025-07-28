@@ -1,0 +1,82 @@
+<div class="page-container" v-cloak>
+    <el-card>
+        <template #header>
+            <div class="breadcrumb">
+                <el-breadcrumb separator="/">
+                    <el-breadcrumb-item>demo</el-breadcrumb-item>
+                </el-breadcrumb>
+            </div>
+        </template>
+        <div>
+            <div id="ww_login"></div>
+            hello demo wechat work
+        </div>
+    </el-card>
+</div>
+<script src="https://wwcdn.weixin.qq.com/node/open/js/wecom-jssdk-2.0.2.js"></script>
+<script>
+
+</script>
+<script>
+    const App = {
+        data() {
+            return {}
+        },
+        mounted() {
+
+            const wwLogin = ww.createWWLoginPanel({
+                el: '#ww_login',
+                params: {
+                    login_type: 'CorpApp',
+                    appid: 'wwe1698cfd81294731',
+                    agentid: '1000002',
+                    redirect_uri: 'http://work.hmfwtech.cn/wechat/work/web',
+                    state: 'loginState',
+                    redirect_type: 'callback',
+                },
+                onCheckWeComLogin({isWeComLogin}) {
+                    console.log(isWeComLogin)
+                },
+                onLoginSuccess({code}) {
+                    console.log({code})
+                },
+                onLoginFail(err) {
+                    console.log(err)
+                },
+            })
+
+
+            this.httpGet("{:url('wechat/work/jssdk')}", {
+                'url': location.href,
+                jsApiList: ['selectEnterpriseContact']
+            }).then(res => {
+                if (res.status) {
+                    let {config} = res.data
+                    ww.register({
+                        ...config,
+                        corpId: config.appId,
+                        getConfigSignature: function (e) {
+                            return config
+                        },
+                        onConfigSuccess: function (e) {
+                            // alert("onConfigSuccess")
+                            // ww.selectEnterpriseContact({
+                            //     fromDepartmentId: -1,
+                            //     mode: 'multi',
+                            //     type: ['department', 'user'],
+                            // }).then(e => {
+                            //     alert("getContext Success" + JSON.stringify(e))
+                            // })
+
+
+                        },
+                        onConfigFail: function (e) {
+                            alert("onConfigFail" + JSON.stringify(e))
+                        }
+                    })
+                }
+            })
+        },
+        methods: {}
+    }
+</script>
